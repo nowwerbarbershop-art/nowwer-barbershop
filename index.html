@@ -2093,6 +2093,12 @@
       const cerrarConfirmacion = () => {
         box.hidden = true;
         box.replaceChildren();
+        // Vuelve todo a como estaba antes de elegir, para que se sienta un proceso terminado
+        // (el nombre y el teléfono NO se tocan: esos siguen siendo los de la cuenta).
+        $('select-barbero').value = '';
+        $('select-fecha').value = '';
+        estado.horaSel = '';
+        renderHorarios();
       };
 
       const texto = `Hola, soy ${cita.clienteNombre}. Reservé una cita con ${nombreBarbero(cita.barberoId)} el ${cita.fecha} a las ${cita.hora}.`;
