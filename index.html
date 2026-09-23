@@ -422,6 +422,51 @@
       margin-bottom: 1.2rem;
     }
 
+    /* PANEL DESPLEGABLE: RESERVAR CITA */
+    .reserva-panel {
+      margin-bottom: 2rem;
+    }
+
+    .reserva-toggle {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      background: var(--card-bg);
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 1rem 1.3rem;
+      color: var(--primary);
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .reserva-toggle:hover,
+    .reserva-toggle[aria-expanded="true"] {
+      border-color: var(--primary);
+    }
+
+    .reserva-toggle span {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .reserva-toggle-icon {
+      transition: transform 0.2s;
+    }
+
+    .reserva-toggle[aria-expanded="true"] .reserva-toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .reserva-contenido {
+      margin-top: 1rem;
+    }
+
     /* RESERVA BLOQUEADA SIN SESIÓN */
     .gate-msg {
       color: var(--text-muted);
@@ -920,72 +965,79 @@
         </div>
       </div>
 
-      <!-- Sin sesión: invitación a entrar -->
-      <div class="form-container" id="reserva-login">
-        <h2><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Reservar Tu Turno</h2>
-        <p class="gate-msg">
-          Para agendar una cita necesitas una cuenta. Así evitamos reservas falsas y tu hora queda a tu nombre.
-        </p>
-        <div class="gate-actions">
-          <button type="button" class="btn" id="btn-gate-login">Iniciar sesión</button>
-          <button type="button" class="btn btn-secondary" id="btn-gate-registro">Crear cuenta</button>
-        </div>
-      </div>
+      <!-- RESERVAR CITA: desplegable, oculto por defecto -->
+      <div class="reserva-panel">
+        <button type="button" class="reserva-toggle" id="btn-reserva-toggle" aria-expanded="false" aria-controls="reserva-contenido">
+          <span><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Reservar Cita</span>
+          <i class="fa-solid fa-chevron-down reserva-toggle-icon" aria-hidden="true"></i>
+        </button>
 
-      <!-- Con sesión pero sin correo verificado -->
-      <div class="form-container" id="reserva-verificar" hidden>
-        <h2><i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i> Verifica tu correo para reservar</h2>
-        <p class="gate-msg">
-          Te enviamos un enlace de confirmación a <strong id="verificar-correo"></strong>.
-          Ábrelo y luego vuelve aquí. Si no lo ves, revisa la carpeta de spam.
-        </p>
-        <div class="gate-actions">
-          <button type="button" class="btn" id="btn-verificado">Ya verifiqué mi correo</button>
-          <button type="button" class="btn btn-secondary" id="btn-reenviar">Reenviar correo</button>
-        </div>
-        <div class="gate-actions" id="verificar-demo" style="margin-top: 0.8rem;" hidden>
-          <button type="button" class="btn btn-secondary btn-demo" id="btn-simular-verif">Simular verificación (solo demo)</button>
-        </div>
-      </div>
-
-      <!-- Con sesión y correo verificado: formulario de reserva -->
-      <div class="form-container" id="reserva-box" hidden>
-        <h2><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Reservar Tu Turno</h2>
-
-        <div class="confirmacion" id="confirmacion" role="status" hidden></div>
-
-        <form id="form-reserva" novalidate>
-          <div class="form-group">
-            <label for="cliente-nombre"><i class="fa-solid fa-user" aria-hidden="true"></i> Nombre Completo</label>
-            <input type="text" id="cliente-nombre" maxlength="80" autocomplete="name" required placeholder="Ej. Carlos Gómez">
-          </div>
-
-          <div class="form-group">
-            <label for="cliente-telefono"><i class="fa-solid fa-phone" aria-hidden="true"></i> Teléfono / WhatsApp</label>
-            <input type="tel" id="cliente-telefono" autocomplete="tel" required placeholder="Ej. 3001234567 o +573001234567">
-          </div>
-
-          <div class="form-group">
-            <label for="select-barbero"><i class="fa-solid fa-user-ninja" aria-hidden="true"></i> Selecciona Barbero</label>
-            <select id="select-barbero" required>
-              <option value="">-- Seleccionar Barbero --</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="select-fecha"><i class="fa-solid fa-calendar" aria-hidden="true"></i> Fecha de la Cita</label>
-            <input type="date" id="select-fecha" required>
-          </div>
-
-          <div class="form-group">
-            <label id="lbl-horas"><i class="fa-solid fa-clock" aria-hidden="true"></i> Hora Disponible</label>
-            <div class="slots-grid" id="grid-horarios" role="group" aria-labelledby="lbl-horas">
-              <small class="slots-msg">Selecciona barbero y fecha...</small>
+        <div class="reserva-contenido" id="reserva-contenido" hidden>
+          <!-- Sin sesión: invitación a entrar -->
+          <div class="form-container" id="reserva-login">
+            <p class="gate-msg">
+              Para agendar una cita necesitas una cuenta. Así evitamos reservas falsas y tu hora queda a tu nombre.
+            </p>
+            <div class="gate-actions">
+              <button type="button" class="btn" id="btn-gate-login">Iniciar sesión</button>
+              <button type="button" class="btn btn-secondary" id="btn-gate-registro">Crear cuenta</button>
             </div>
           </div>
 
-          <button type="submit" class="btn" id="btn-reservar" style="margin-top: 1rem;">Confirmar Cita Ahora</button>
-        </form>
+          <!-- Con sesión pero sin correo verificado -->
+          <div class="form-container" id="reserva-verificar" hidden>
+            <h2><i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i> Verifica tu correo para reservar</h2>
+            <p class="gate-msg">
+              Te enviamos un enlace de confirmación a <strong id="verificar-correo"></strong>.
+              Ábrelo y luego vuelve aquí. Si no lo ves, revisa la carpeta de spam.
+            </p>
+            <div class="gate-actions">
+              <button type="button" class="btn" id="btn-verificado">Ya verifiqué mi correo</button>
+              <button type="button" class="btn btn-secondary" id="btn-reenviar">Reenviar correo</button>
+            </div>
+            <div class="gate-actions" id="verificar-demo" style="margin-top: 0.8rem;" hidden>
+              <button type="button" class="btn btn-secondary btn-demo" id="btn-simular-verif">Simular verificación (solo demo)</button>
+            </div>
+          </div>
+
+          <!-- Con sesión y correo verificado: formulario de reserva -->
+          <div class="form-container" id="reserva-box" hidden>
+            <div class="confirmacion" id="confirmacion" role="status" hidden></div>
+
+            <form id="form-reserva" novalidate>
+              <div class="form-group">
+                <label for="cliente-nombre"><i class="fa-solid fa-user" aria-hidden="true"></i> Nombre Completo</label>
+                <input type="text" id="cliente-nombre" maxlength="80" autocomplete="name" required placeholder="Ej. Carlos Gómez">
+              </div>
+
+              <div class="form-group">
+                <label for="cliente-telefono"><i class="fa-solid fa-phone" aria-hidden="true"></i> Teléfono / WhatsApp</label>
+                <input type="tel" id="cliente-telefono" autocomplete="tel" required placeholder="Ej. 3001234567 o +573001234567">
+              </div>
+
+              <div class="form-group">
+                <label for="select-barbero"><i class="fa-solid fa-user-ninja" aria-hidden="true"></i> Selecciona Barbero</label>
+                <select id="select-barbero" required>
+                  <option value="">-- Seleccionar Barbero --</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="select-fecha"><i class="fa-solid fa-calendar" aria-hidden="true"></i> Fecha de la Cita</label>
+                <input type="date" id="select-fecha" required>
+              </div>
+
+              <div class="form-group">
+                <label id="lbl-horas"><i class="fa-solid fa-clock" aria-hidden="true"></i> Hora Disponible</label>
+                <div class="slots-grid" id="grid-horarios" role="group" aria-labelledby="lbl-horas">
+                  <small class="slots-msg">Selecciona barbero y fecha...</small>
+                </div>
+              </div>
+
+              <button type="submit" class="btn" id="btn-reservar" style="margin-top: 1rem;">Confirmar Cita Ahora</button>
+            </form>
+          </div>
+        </div>
       </div>
 
       <!-- GALERÍA DE TRABAJOS -->
@@ -1769,7 +1821,8 @@
       diasBloqueados: [],
       horaSel: '',
       modo: 'dia',          // 'dia' | 'historico'
-      vista: 'cliente'      // 'cliente' | 'login' | 'barbero'
+      vista: 'cliente',     // 'cliente' | 'login' | 'barbero'
+      reservaAbierta: false // el panel "Reservar Cita" empieza oculto
     };
     let desuscribirCitas = null;
 
@@ -1802,8 +1855,8 @@
     }
 
     // Con sesión se ve el formulario de reserva; sin sesión, la invitación a entrar.
-    // Sin sesión: invitación a entrar. Con sesión pero sin correo verificado: pide verificar.
-    // Con correo verificado (o barbero): formulario de reserva.
+    // Con correo sin verificar, se pide verificar. El panel entero empieza oculto:
+    // se abre con el botón "Reservar Cita" para no taparle al cliente el resto de la página.
     function actualizarReserva() {
       const u = estado.usuario;
       const puedeReservar = !!u && (u.admin || u.verificado);
@@ -1811,6 +1864,16 @@
       $('reserva-verificar').hidden = !(u && !puedeReservar);
       $('reserva-box').hidden = !puedeReservar;
       if (u && !puedeReservar) $('verificar-correo').textContent = u.email;
+    }
+
+    function actualizarPanelReserva() {
+      $('reserva-contenido').hidden = !estado.reservaAbierta;
+      $('btn-reserva-toggle').setAttribute('aria-expanded', String(estado.reservaAbierta));
+    }
+
+    function alternarPanelReserva() {
+      estado.reservaAbierta = !estado.reservaAbierta;
+      actualizarPanelReserva();
     }
 
     function limpiarFormularioReserva() {
@@ -2524,6 +2587,9 @@
         try { await Store.logout(); } catch (err) { console.error(err); avisar('No se pudo cerrar sesión.', 'error'); }
       });
 
+      // Panel "Reservar Cita" (desplegable)
+      $('btn-reserva-toggle').addEventListener('click', alternarPanelReserva);
+
       // Acceso
       document.querySelectorAll('.auth-tab').forEach(b => b.addEventListener('click', () => abrirAcceso(b.dataset.auth)));
       $('btn-gate-login').addEventListener('click', () => abrirAcceso('login'));
@@ -2587,6 +2653,7 @@
       conectarEventos();
       mostrarVista('cliente');
       actualizarReserva();
+      actualizarPanelReserva();
 
       if (!USAR_FIREBASE) {
         $('banner-demo').hidden = false;
