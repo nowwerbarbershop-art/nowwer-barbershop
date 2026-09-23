@@ -2061,13 +2061,27 @@
       box.appendChild(el('strong', null, '¡Tu cita ha sido agendada con éxito!'));
       box.appendChild(el('span', null, `${nombreBarbero(cita.barberoId)} · ${cita.fecha} · ${cita.hora}`));
 
+      const cerrarConfirmacion = () => {
+        box.hidden = true;
+        box.replaceChildren();
+      };
+
       const texto = `Hola, soy ${cita.clienteNombre}. Reservé una cita con ${nombreBarbero(cita.barberoId)} el ${cita.fecha} a las ${cita.hora}.`;
       const a = el('a');
       a.href = `https://wa.me/${WHATSAPP_NEGOCIO}?text=${encodeURIComponent(texto)}`;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
       a.append(icono('fa-brands fa-whatsapp'), ' Avisar por WhatsApp');
+      // Al abrir WhatsApp en otra pestaña, esta pantalla ya cumplió su función: se cierra sola.
+      a.addEventListener('click', () => setTimeout(cerrarConfirmacion, 400));
       box.appendChild(a);
+
+      // Por si no quiere avisar por WhatsApp, para poder cerrar el aviso igual.
+      const btnListo = el('button', 'link-btn', 'Listo, hacer otra reserva');
+      btnListo.type = 'button';
+      btnListo.style.marginBottom = '0';
+      btnListo.addEventListener('click', cerrarConfirmacion);
+      box.appendChild(btnListo);
 
       box.hidden = false;
       box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
