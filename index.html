@@ -833,9 +833,6 @@
     </div>
     <nav class="nav-tabs" aria-label="Navegación principal">
       <span class="nav-saludo" id="nav-saludo" hidden></span>
-      <button type="button" class="tab-btn" id="btn-acceso">
-        <i class="fa-solid fa-user" aria-hidden="true"></i> Iniciar sesión
-      </button>
       <button type="button" class="tab-btn" id="btn-tab-cliente" hidden>Vista Cliente</button>
       <button type="button" class="tab-btn" id="btn-tab-barbero" hidden>Panel Barbero</button>
       <button type="button" class="tab-btn danger" id="btn-salir" hidden>Cerrar Sesión</button>
@@ -923,25 +920,6 @@
         </div>
       </div>
 
-      <!-- GALERÍA DE TRABAJOS -->
-      <div class="section-title">
-        <i class="fa-solid fa-camera" aria-hidden="true"></i> Estilos y Trabajos Recientes
-      </div>
-      <div class="gallery-grid">
-        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Corte Fade Tradicional">
-          <img loading="lazy" src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=600&q=80" alt="Corte Fade Tradicional">
-        </div>
-        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Perfilado de Barba">
-          <img loading="lazy" src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=600&q=80" alt="Perfilado de Barba">
-        </div>
-        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Corte Moderno">
-          <img loading="lazy" src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=600&q=80" alt="Corte Moderno">
-        </div>
-        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Diseño de Estilo">
-          <img loading="lazy" src="https://images.unsplash.com/photo-1517832606589-7150048cb151?auto=format&fit=crop&w=600&q=80" alt="Diseño de Estilo">
-        </div>
-      </div>
-
       <!-- Sin sesión: invitación a entrar -->
       <div class="form-container" id="reserva-login">
         <h2><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Reservar Tu Turno</h2>
@@ -1009,7 +987,27 @@
           <button type="submit" class="btn" id="btn-reservar" style="margin-top: 1rem;">Confirmar Cita Ahora</button>
         </form>
       </div>
+
+      <!-- GALERÍA DE TRABAJOS -->
+      <div class="section-title">
+        <i class="fa-solid fa-camera" aria-hidden="true"></i> Estilos y Trabajos Recientes
+      </div>
+      <div class="gallery-grid">
+        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Corte Fade Tradicional">
+          <img loading="lazy" src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=600&q=80" alt="Corte Fade Tradicional">
+        </div>
+        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Perfilado de Barba">
+          <img loading="lazy" src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=600&q=80" alt="Perfilado de Barba">
+        </div>
+        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Corte Moderno">
+          <img loading="lazy" src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=600&q=80" alt="Corte Moderno">
+        </div>
+        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Diseño de Estilo">
+          <img loading="lazy" src="https://images.unsplash.com/photo-1517832606589-7150048cb151?auto=format&fit=crop&w=600&q=80" alt="Diseño de Estilo">
+        </div>
+      </div>
     </section>
+
 
     <!-- ================= SECCIÓN 2: PANEL DEL BARBERO ================= -->
     <section id="view-barbero" class="view-section">
@@ -1787,7 +1785,6 @@
       saludo.hidden = !u || estado.esBarbero;
       saludo.textContent = u ? `Hola, ${String(u.nombre || u.email).split(' ')[0]}` : '';
 
-      $('btn-acceso').hidden = !!u || nombre === 'login';
       $('btn-tab-cliente').hidden = !estado.esBarbero;
       $('btn-tab-barbero').hidden = !estado.esBarbero;
       $('btn-salir').hidden = !u;
@@ -2520,7 +2517,6 @@
        ===================================================================== */
     function conectarEventos() {
       // Navegación
-      $('btn-acceso').addEventListener('click', () => abrirAcceso('login'));
       document.querySelectorAll('.btn-volver').forEach(b => b.addEventListener('click', () => mostrarVista('cliente')));
       $('btn-tab-cliente').addEventListener('click', () => mostrarVista('cliente'));
       $('btn-tab-barbero').addEventListener('click', () => mostrarVista('barbero'));
@@ -2605,7 +2601,6 @@
         const b = $('banner-error');
         b.textContent = 'No se pudo conectar con el servidor. Revisa tu conexión y recarga la página.';
         b.hidden = false;
-        $('btn-acceso').hidden = true;
         $('btn-gate-login').disabled = true;
         $('btn-gate-registro').disabled = true;
         return;
