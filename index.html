@@ -1327,12 +1327,13 @@
         citas: 'barber_demo_citas',
         dias: 'barber_demo_dias',
         usuarios: 'barber_demo_usuarios',
-        sesion: 'barber_demo_sesion'
+        sesion: 'barber_demo_sesion',
+        perfilStaff: 'barber_demo_perfil_staff'
       };
       const oyentes = new Set();         // cambios en citas
       const oyentesDias = new Set();     // cambios en días bloqueados
       const oyentesSesion = new Set();
-      let citas = [], dias = [], usuarios = [];
+      let citas = [], dias = [], usuarios = [], perfilStaff = {};
 
       const leer = (k, def) => {
         try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) { /* ignorar */ }
@@ -1357,6 +1358,7 @@
         if (c) { citas = c; } else { citas = semilla(); guardar(K.citas, citas); }
         dias = leer(K.dias, []);
         usuarios = leer(K.usuarios, []);
+        perfilStaff = leer(K.perfilStaff, {});
       }
 
       const emitir = () => oyentes.forEach(fn => fn());
@@ -1369,8 +1371,11 @@
         if (!id) return null;
         const staff = DEMO_STAFF[id];
         if (staff) {
+          const perfil = perfilStaff[id] || {};
           return {
-            uid: id, email: id, nombre: nombreBarbero(staff.barberoId), telefono: '',
+            uid: id, email: id,
+            nombre: perfil.nombre || nombreBarbero(staff.barberoId),
+            telefono: perfil.telefono || '',
             admin: staff.admin === true, barberoId: staff.barberoId, esBarbero: true, verificado: true
           };
         }
@@ -1399,7 +1404,7 @@
             cargar();
             emitir();
             emitirDias();
-            if (e.key === K.sesion || e.key === K.usuarios) emitirSesion();
+            if (e.key === K.sesion || e.key === K.usuarios || e.key === K.perfilStaff) emitirSesion();
           });
         },
 
@@ -1515,6 +1520,21 @@
         async logout() {
           try { localStorage.removeItem(K.sesion); } catch (e) { /* ignorar */ }
           emitirSesion();
+        },
+
+        // Guarda el nombre/teléfono para que la próxima vez ya vengan listos,
+        // sea la cuenta de un cliente o la del personal (dueño o empleado).
+        async actualizarPerfil({ nombre, telefono }) {
+          const id = leer(K.sesion, null);
+          if (!id) return;
+          if (DEMO_STAFF[id]) {
+            perfilStaff[id] = { nombre, telefono };
+            guardar(K.perfilStaff, perfilStaff);
+          } else {
+            const u = usuarios.find(x => x.uid === id);
+            if (u) { u.nombre = nombre; u.telefono = telefono; guardar(K.usuarios, usuarios); }
+          }
+          emitirSesion();
         }
       };
     })();
@@ -1549,18 +1569,19 @@
           if (admin && token.claims.barberoId) barberoId = token.claims.barberoId; // el dueño también atiende citas
         } catch (e) { console.error(e); }
         if (admin) esBarbero = true;
+        if (esBarbero && barberoId) nombre = nombreBarbero(barberoId); // valor por defecto la primera vez
 
         if (registrando && registrando.email === user.email) {
           nombre = registrando.nombre;
           telefono = registrando.telefono;
-        } else if (esBarbero && barberoId) {
-          nombre = nombreBarbero(barberoId);
         } else {
+          // Tanto el personal como los clientes pueden tener un perfil guardado
+          // (se crea/actualiza solo, la primera vez que reservan desde su cuenta).
           try {
             const snap = await fs.getDoc(fs.doc(db, 'usuarios', user.uid));
             if (snap.exists()) {
               nombre = snap.data().nombre || nombre;
-              telefono = snap.data().telefono || '';
+              telefono = snap.data().telefono || telefono;
             }
           } catch (e) { console.error(e); }
         }
@@ -1722,6 +1743,15 @@
 
         async logout() {
           await fb.auth.signOut(fb.au);
+        },
+
+        // Reutiliza la misma colección "usuarios" para cualquiera con sesión,
+        // sea cliente o personal (dueño o empleado).
+        async actualizarPerfil({ nombre, telefono }) {
+          const { fs, db, au } = fb;
+          const user = au.currentUser;
+          if (!user) return;
+          await fs.setDoc(fs.doc(db, 'usuarios', user.uid), { nombre, telefono }, { merge: true });
         }
       };
     })();
@@ -1818,11 +1848,10 @@
       if (cambio) {
         limpiarFormularioReserva();
         if (usuario) {
-          // Los datos de la cuenta se cargan solos en el formulario de reserva.
-          if (!usuario.esBarbero) {
-            $('cliente-nombre').value = usuario.nombre || '';
-            $('cliente-telefono').value = usuario.telefono ? '+' + usuario.telefono : '';
-          }
+          // Los datos de la cuenta se cargan solos en el formulario de reserva
+          // (cliente o personal); el teléfono queda vacío hasta la primera vez que lo escriban.
+          $('cliente-nombre').value = usuario.nombre || '';
+          $('cliente-telefono').value = usuario.telefono ? '+' + usuario.telefono : '';
           mostrarVista(usuario.esBarbero ? 'barbero' : 'cliente');
         } else {
           mostrarVista(estado.vista === 'barbero' ? 'cliente' : estado.vista);
@@ -2128,6 +2157,13 @@
         estado.horaSel = '';
         renderHorarios();
         mostrarConfirmacion(cita);
+
+        // Deja el nombre/teléfono guardados para que la próxima vez ya vengan solos.
+        if (estado.usuario.nombre !== nombre || estado.usuario.telefono !== telefono) {
+          estado.usuario.nombre = nombre;
+          estado.usuario.telefono = telefono;
+          Store.actualizarPerfil({ nombre, telefono }).catch(err => console.error('No se pudo guardar el perfil:', err));
+        }
       } catch (err) {
         const codigo = err && err.message;
         if (codigo === 'OCUPADO') {
