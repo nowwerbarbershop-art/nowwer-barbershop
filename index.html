@@ -1,0 +1,2573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Reserva tu cita en Nowwer Barbershop: elige barbero, fecha y hora en segundos.">
+  <meta name="theme-color" content="#0d0d0d">
+  <title>Nowwer Barbershop - Reservas</title>
+
+  <!-- Ícono del navegador y de "agregar a inicio" en el celular -->
+  <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+
+  <!--
+    Vista previa al compartir el link (WhatsApp, Facebook, etc.)
+    IMPORTANTE: og:image y og:url deben ser una URL COMPLETA y pública;
+    WhatsApp/Facebook no leen imágenes incrustadas ni rutas relativas.
+    Reemplaza TU-USUARIO y TU-REPO por los reales cuando publiquemos en GitHub Pages.
+  -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Nowwer Barbershop">
+  <meta property="og:description" content="Reserva tu cita en Nowwer Barbershop: elige barbero, fecha y hora en segundos.">
+  <meta property="og:image" content="https://TU-USUARIO.github.io/TU-REPO/img/social-preview.png">
+  <meta property="og:url" content="https://TU-USUARIO.github.io/TU-REPO/">
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --primary: #d4af37;
+      --primary-hover: #b89528;
+      --bg-dark: #121212;
+      --card-bg: #1e1e1e;
+      --input-bg: #2a2a2a;
+      --text-light: #f5f5f5;
+      --text-muted: #a0a0a0;
+      --danger: #e74c3c;
+      --success: #2ecc71;
+      --info: #3498db;
+      --warning: #f39c12;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    [hidden] { display: none !important; }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding-bottom: 2rem;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    /* Header Nav */
+    header {
+      background-color: #0d0d0d;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--primary);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .nav-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-saludo {
+      color: var(--text-light);
+      font-size: 0.9rem;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--primary);
+      color: #000;
+    }
+
+    .tab-btn.danger {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .tab-btn.danger:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    /* Avisos */
+    .banner {
+      background: rgba(243, 156, 18, 0.15);
+      border-bottom: 1px solid var(--warning);
+      color: var(--warning);
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 0.5rem 1rem;
+    }
+
+    .banner.error {
+      background: rgba(231, 76, 60, 0.15);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      padding: 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+
+    h2 {
+      margin-bottom: 1.2rem;
+      color: var(--primary);
+      border-bottom: 1px solid #333;
+      padding-bottom: 0.5rem;
+      font-size: 1.4rem;
+    }
+
+    /* BANNER & GALERÍA DE BARBERÍA */
+    .hero-banner {
+      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url('img/banner-fondo.jpg') center/cover;
+      border-radius: 12px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      border: 1px solid #333;
+    }
+
+    .hero-banner h1 {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .hero-banner p {
+      color: #ddd;
+      font-size: 0.95rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .social-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      backdrop-filter: blur(5px);
+      transition: background 0.3s;
+    }
+
+    .social-btn:hover {
+      background: var(--primary);
+      color: #000;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      color: #fff;
+      margin: 1.5rem 0 1rem 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .gallery-item {
+      height: 130px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #333;
+      cursor: pointer;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s;
+    }
+
+    .gallery-item:hover img { transform: scale(1.08); }
+
+    /* MODAL VISOR DE FOTOS */
+    .modal-lightbox {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    .modal-lightbox img {
+      max-width: 90%;
+      max-height: 85%;
+      border-radius: 10px;
+      border: 2px solid var(--primary);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 20px;
+      right: 25px;
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 2rem;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    /* FORMS & INPUTS */
+    .form-container {
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 1px solid #333;
+    }
+
+    .form-group { margin-bottom: 1.2rem; }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      background: var(--input-bg);
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 1px;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: #000;
+      border: none;
+      padding: 12px 24px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+
+    .btn:hover { background: var(--primary-hover); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid #444;
+    }
+
+    .btn-secondary:hover { background: #2a2a2a; }
+
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: #c0392b; }
+
+    .btn-demo {
+      border-style: dashed;
+      color: var(--primary);
+    }
+
+    .form-error {
+      color: var(--danger);
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      min-height: 1.2em;
+    }
+
+    .hint {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .link-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      cursor: pointer;
+      font-size: 0.85rem;
+      text-decoration: underline;
+      padding: 0;
+      margin-bottom: 1rem;
+    }
+
+    /* ACCESO (LOGIN / REGISTRO) */
+    .login-box {
+      max-width: 420px;
+      margin: 2rem auto;
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid #333;
+    }
+
+    .auth-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 1.2rem;
+      border-bottom: 1px solid #333;
+      padding-bottom: 0.8rem;
+    }
+
+    .auth-tab {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.95rem;
+      border-radius: 4px;
+    }
+
+    .auth-tab.active {
+      background: var(--input-bg);
+      color: var(--primary);
+    }
+
+    .demo-hint {
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px dashed var(--primary);
+      border-radius: 6px;
+      padding: 0.6rem 0.8rem;
+      font-size: 0.8rem;
+      color: var(--primary);
+      margin-bottom: 1.2rem;
+    }
+
+    /* RESERVA BLOQUEADA SIN SESIÓN */
+    .gate-msg {
+      color: var(--text-muted);
+      margin-bottom: 1.2rem;
+      font-size: 0.95rem;
+    }
+
+    .gate-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .gate-actions .btn {
+      flex: 1 1 180px;
+      width: auto;
+    }
+
+    /* SLOTS GRID */
+    .slots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 10px;
+      margin-top: 0.8rem;
+    }
+
+    .slots-grid .slots-msg {
+      grid-column: 1 / -1;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .slots-grid .slots-msg.warn { color: var(--warning); }
+
+    .slot-btn {
+      padding: 10px;
+      background: var(--input-bg);
+      border: 1px solid #444;
+      color: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 0.85rem;
+    }
+
+    .slot-btn:hover:not(:disabled) { border-color: var(--primary); }
+
+    .slot-btn.selected {
+      background: var(--primary);
+      color: #000;
+      font-weight: 700;
+    }
+
+    .slot-btn.blocked {
+      background: #252525;
+      color: #8a8a8a;
+      text-decoration: line-through;
+      cursor: not-allowed;
+      border-color: #333;
+    }
+
+    /* CONFIRMACIÓN DE RESERVA */
+    .confirmacion {
+      background: rgba(46, 204, 113, 0.12);
+      border: 1px solid var(--success);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .confirmacion strong { color: var(--success); }
+
+    .confirmacion a {
+      align-self: flex-start;
+      color: #25D366;
+      font-size: 0.9rem;
+      text-decoration: none;
+    }
+
+    .confirmacion a:hover { text-decoration: underline; }
+
+    /* METRIC CARDS / DASHBOARD BARBERO */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 2rem;
+    }
+
+    .metric-card {
+      background: var(--card-bg);
+      padding: 1.2rem;
+      border-radius: 10px;
+      border: 1px solid #333;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .metric-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+
+    .metric-info h4 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .metric-info p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* DÍAS DE DESCANSO */
+    .dias-panel {
+      background: var(--card-bg);
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .dias-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 0.8rem;
+    }
+
+    .dias-header .section-title { margin: 0; }
+
+    .dias-header .btn {
+      width: auto;
+      padding: 8px 14px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(160, 160, 160, 0.15);
+      border: 1px solid #444;
+      border-radius: 20px;
+      padding: 5px 5px 5px 12px;
+      font-size: 0.85rem;
+    }
+
+    .chip-btn {
+      background: var(--input-bg);
+      border: 1px solid #555;
+      color: #fff;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+
+    .chip-btn:hover { background: var(--danger); border-color: var(--danger); }
+
+    /* FILTROS / SUBTABS EN PANEL BARBERO */
+    .panel-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .toolbar-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-controls select,
+    .toolbar-controls input {
+      width: auto;
+      padding: 6px 10px;
+    }
+
+    .toolbar-controls .btn {
+      width: auto;
+      padding: 8px 14px;
+    }
+
+    .subtabs {
+      display: flex;
+      gap: 10px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 0.8rem;
+    }
+
+    .subtab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 12px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9rem;
+      border-radius: 4px;
+    }
+
+    .subtab-btn.active {
+      background: var(--input-bg);
+      color: var(--primary);
+    }
+
+    /* CARDS LISTING */
+    .cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      padding: 1.2rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #2a2a2a;
+      border-right: 1px solid #2a2a2a;
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    .card.card-descanso { border-left-color: #888; }
+
+    .card-info h3 {
+      font-size: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .card-info p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .empty-msg {
+      color: var(--text-muted);
+      text-align: center;
+      padding: 1rem 0;
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-pendiente  { background: rgba(243, 156, 18, 0.2); color: var(--warning); }
+    .badge-completada { background: rgba(46, 204, 113, 0.2); color: var(--success); }
+    .badge-cancelada  { background: rgba(231, 76, 60, 0.2);  color: var(--danger); }
+    .badge-bloqueada  { background: rgba(160, 160, 160, 0.2); color: #bbb; }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      background: var(--input-bg);
+      border: 1px solid #444;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .action-btn:hover { background: #333; }
+
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    /* DIÁLOGOS */
+    dialog {
+      margin: auto;
+      background: var(--card-bg);
+      color: var(--text-light);
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: min(92vw, 380px);
+    }
+
+    dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
+
+    dialog h3 {
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .dialog-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 1rem;
+    }
+
+    /* AVISOS EMERGENTES */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 1.5rem;
+      transform: translate(-50%, 20px);
+      background: #2a2a2a;
+      color: #fff;
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      padding: 0.8rem 1.2rem;
+      font-size: 0.9rem;
+      width: max-content;
+      max-width: 90vw;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 2000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .toast.error { border-color: var(--danger); }
+
+    @media (max-width: 600px) {
+      main { padding: 1rem; }
+      header { flex-direction: column; gap: 0.8rem; padding: 1rem; }
+      .hero-banner { padding: 1.5rem 1rem; }
+      .card { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .card-actions { width: 100%; justify-content: flex-end; }
+      .dashboard-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .login-box { padding: 1.5rem 1.2rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!--
+    ============================================================
+    CÓMO PONER LA APP EN PRODUCCIÓN (Firebase)
+    1. Crea un proyecto en https://console.firebase.google.com
+       y activa Firestore y Authentication con el método
+       "Correo electrónico/contraseña".
+    2. Pega tus datos en FIREBASE_CONFIG (más abajo, en el script).
+    3. Publica las reglas del archivo firestore.rules.
+    4. Los clientes deben VERIFICAR SU CORREO para poder reservar:
+       Firebase les envía el enlace al crear la cuenta. Para que el
+       correo llegue en español: Authentication > Plantillas >
+       "Verificación de dirección de correo" > Idioma.
+    5. Crea tu cuenta de barbero desde "Iniciar sesión > Crear cuenta"
+       y dale permisos de barbero (una sola vez, con el Admin SDK):
+         admin.auth().setCustomUserClaims(UID, { admin: true })
+       Luego cierra sesión y vuelve a entrar para que se aplique.
+       (El barbero no necesita verificar su correo.)
+    Mientras FIREBASE_CONFIG tenga "TU_API_KEY_AQUI", la app corre en
+    MODO DEMO: cuentas y citas se guardan solo en este navegador
+    (sin seguridad real) y la verificación de correo se simula con un
+    botón.
+    ============================================================
+  -->
+
+  <!-- HEADER NAV -->
+  <header>
+    <div class="brand">
+      <i class="fa-solid fa-scissors" aria-hidden="true"></i> Nowwer Barbershop
+    </div>
+    <nav class="nav-tabs" aria-label="Navegación principal">
+      <span class="nav-saludo" id="nav-saludo" hidden></span>
+      <button type="button" class="tab-btn" id="btn-acceso">
+        <i class="fa-solid fa-user" aria-hidden="true"></i> Iniciar sesión
+      </button>
+      <button type="button" class="tab-btn" id="btn-tab-cliente" hidden>Vista Cliente</button>
+      <button type="button" class="tab-btn" id="btn-tab-barbero" hidden>Panel Barbero</button>
+      <button type="button" class="tab-btn danger" id="btn-salir" hidden>Cerrar Sesión</button>
+    </nav>
+  </header>
+
+  <div class="banner" id="banner-demo" hidden>
+    MODO DEMO: cuentas y citas se guardan solo en este navegador. Configura Firebase para compartirlas con el barbero.
+  </div>
+  <div class="banner error" id="banner-error" role="alert" hidden></div>
+
+  <main>
+    <!-- ================= SECCIÓN 0: ACCESO (LOGIN / REGISTRO) ================= -->
+    <section id="view-login" class="view-section">
+      <div class="login-box">
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab active" data-auth="login">Iniciar sesión</button>
+          <button type="button" class="auth-tab" data-auth="registro">Crear cuenta</button>
+        </div>
+
+        <p class="demo-hint" id="demo-hint" hidden>
+          Modo demo. Dueño: <b>nowwerbarbershop@gmail.com</b> / <b>admin123</b>.
+          Osnayder y Santiago: sus correos reales, contraseñas <b>osnayder123</b> / <b>santiago123</b> (temporales, solo para probar).
+          Los clientes crean su cuenta en la pestaña "Crear cuenta"; la verificación de correo se simula con un botón.
+        </p>
+
+        <!-- Iniciar sesión -->
+        <form id="form-login" novalidate>
+          <div class="form-group">
+            <label for="login-email">Correo</label>
+            <input type="text" id="login-email" autocomplete="username" autocapitalize="none" required>
+          </div>
+          <div class="form-group">
+            <label for="login-pass">Contraseña</label>
+            <input type="password" id="login-pass" autocomplete="current-password" required>
+          </div>
+          <button type="button" class="link-btn" id="btn-olvide">¿Olvidaste tu contraseña?</button>
+          <p class="form-error" id="login-error" role="alert"></p>
+          <button type="submit" class="btn" id="btn-login">Ingresar</button>
+          <button type="button" class="btn btn-secondary btn-volver" style="margin-top: 0.6rem;">Volver</button>
+        </form>
+
+        <!-- Crear cuenta -->
+        <form id="form-registro" novalidate hidden>
+          <div class="form-group">
+            <label for="reg-nombre">Nombre completo</label>
+            <input type="text" id="reg-nombre" maxlength="80" autocomplete="name" required placeholder="Ej. Carlos Gómez">
+          </div>
+          <div class="form-group">
+            <label for="reg-telefono">Teléfono / WhatsApp</label>
+            <input type="tel" id="reg-telefono" autocomplete="tel" required placeholder="Ej. 3001234567 o +573001234567">
+          </div>
+          <div class="form-group">
+            <label for="reg-email">Correo</label>
+            <input type="email" id="reg-email" autocomplete="email" autocapitalize="none" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-pass">Contraseña (mínimo 6 caracteres)</label>
+            <input type="password" id="reg-pass" autocomplete="new-password" minlength="6" required>
+          </div>
+          <p class="form-error" id="registro-error" role="alert"></p>
+          <button type="submit" class="btn" id="btn-registro">Crear mi cuenta</button>
+          <button type="button" class="btn btn-secondary btn-volver" style="margin-top: 0.6rem;">Volver</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ================= SECCIÓN 1: PANEL DEL CLIENTE ================= -->
+    <section id="view-cliente" class="view-section active">
+
+      <!-- Banner e Info Social -->
+      <div class="hero-banner">
+        <h1>Cortes de Alta Gama</h1>
+        <p>Tu estilo en manos de los mejores profesionales. Agenda tu cita en segundos.</p>
+        <div class="social-links">
+          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="social-btn">
+            <i class="fa-brands fa-instagram" aria-hidden="true"></i> Instagram
+          </a>
+          <a href="https://wa.me/573148962096" target="_blank" rel="noopener noreferrer" class="social-btn">
+            <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> WhatsApp
+          </a>
+          <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" class="social-btn">
+            <i class="fa-solid fa-location-dot" aria-hidden="true"></i> Ubicación
+          </a>
+        </div>
+      </div>
+
+      <!-- GALERÍA DE TRABAJOS -->
+      <div class="section-title">
+        <i class="fa-solid fa-camera" aria-hidden="true"></i> Estilos y Trabajos Recientes
+      </div>
+      <div class="gallery-grid">
+        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Corte Fade Tradicional">
+          <img loading="lazy" src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=600&q=80" alt="Corte Fade Tradicional">
+        </div>
+        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Perfilado de Barba">
+          <img loading="lazy" src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=600&q=80" alt="Perfilado de Barba">
+        </div>
+        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Corte Moderno">
+          <img loading="lazy" src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=600&q=80" alt="Corte Moderno">
+        </div>
+        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Diseño de Estilo">
+          <img loading="lazy" src="https://images.unsplash.com/photo-1517832606589-7150048cb151?auto=format&fit=crop&w=600&q=80" alt="Diseño de Estilo">
+        </div>
+      </div>
+
+      <!-- Sin sesión: invitación a entrar -->
+      <div class="form-container" id="reserva-login">
+        <h2><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Reservar Tu Turno</h2>
+        <p class="gate-msg">
+          Para agendar una cita necesitas una cuenta. Así evitamos reservas falsas y tu hora queda a tu nombre.
+        </p>
+        <div class="gate-actions">
+          <button type="button" class="btn" id="btn-gate-login">Iniciar sesión</button>
+          <button type="button" class="btn btn-secondary" id="btn-gate-registro">Crear cuenta</button>
+        </div>
+      </div>
+
+      <!-- Con sesión pero sin correo verificado -->
+      <div class="form-container" id="reserva-verificar" hidden>
+        <h2><i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i> Verifica tu correo para reservar</h2>
+        <p class="gate-msg">
+          Te enviamos un enlace de confirmación a <strong id="verificar-correo"></strong>.
+          Ábrelo y luego vuelve aquí. Si no lo ves, revisa la carpeta de spam.
+        </p>
+        <div class="gate-actions">
+          <button type="button" class="btn" id="btn-verificado">Ya verifiqué mi correo</button>
+          <button type="button" class="btn btn-secondary" id="btn-reenviar">Reenviar correo</button>
+        </div>
+        <div class="gate-actions" id="verificar-demo" style="margin-top: 0.8rem;" hidden>
+          <button type="button" class="btn btn-secondary btn-demo" id="btn-simular-verif">Simular verificación (solo demo)</button>
+        </div>
+      </div>
+
+      <!-- Con sesión y correo verificado: formulario de reserva -->
+      <div class="form-container" id="reserva-box" hidden>
+        <h2><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Reservar Tu Turno</h2>
+
+        <div class="confirmacion" id="confirmacion" role="status" hidden></div>
+
+        <form id="form-reserva" novalidate>
+          <div class="form-group">
+            <label for="cliente-nombre"><i class="fa-solid fa-user" aria-hidden="true"></i> Nombre Completo</label>
+            <input type="text" id="cliente-nombre" maxlength="80" autocomplete="name" required placeholder="Ej. Carlos Gómez">
+          </div>
+
+          <div class="form-group">
+            <label for="cliente-telefono"><i class="fa-solid fa-phone" aria-hidden="true"></i> Teléfono / WhatsApp</label>
+            <input type="tel" id="cliente-telefono" autocomplete="tel" required placeholder="Ej. 3001234567 o +573001234567">
+          </div>
+
+          <div class="form-group">
+            <label for="select-barbero"><i class="fa-solid fa-user-ninja" aria-hidden="true"></i> Selecciona Barbero</label>
+            <select id="select-barbero" required>
+              <option value="">-- Seleccionar Barbero --</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="select-fecha"><i class="fa-solid fa-calendar" aria-hidden="true"></i> Fecha de la Cita</label>
+            <input type="date" id="select-fecha" required>
+          </div>
+
+          <div class="form-group">
+            <label id="lbl-horas"><i class="fa-solid fa-clock" aria-hidden="true"></i> Hora Disponible</label>
+            <div class="slots-grid" id="grid-horarios" role="group" aria-labelledby="lbl-horas">
+              <small class="slots-msg">Selecciona barbero y fecha...</small>
+            </div>
+          </div>
+
+          <button type="submit" class="btn" id="btn-reservar" style="margin-top: 1rem;">Confirmar Cita Ahora</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ================= SECCIÓN 2: PANEL DEL BARBERO ================= -->
+    <section id="view-barbero" class="view-section">
+      <div class="dashboard-header">
+        <h2 style="margin-bottom: 0;">Panel de Control &amp; Estadísticas</h2>
+      </div>
+      <p class="hint" id="panel-subtitulo" style="margin-top:-0.8rem" hidden></p>
+
+      <!-- METRIC CARDS / CONTADORES -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(52, 152, 219, 0.2); color: var(--info);">
+            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+          </div>
+          <div class="metric-info">
+            <h4 id="cnt-historico-total">0</h4>
+            <p>Histórico Total Citas</p>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(212, 175, 55, 0.2); color: var(--primary);">
+            <i class="fa-solid fa-calendar-day" aria-hidden="true"></i>
+          </div>
+          <div class="metric-info">
+            <h4 id="cnt-totales">0</h4>
+            <p>Citas de Hoy</p>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(243, 156, 18, 0.2); color: var(--warning);">
+            <i class="fa-solid fa-clock" aria-hidden="true"></i>
+          </div>
+          <div class="metric-info">
+            <h4 id="cnt-pendientes">0</h4>
+            <p>Pendientes Hoy</p>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(46, 204, 113, 0.2); color: var(--success);">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+          </div>
+          <div class="metric-info">
+            <h4 id="cnt-completadas">0</h4>
+            <p>Completadas Hoy</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- DÍAS DE DESCANSO -->
+      <div class="dias-panel">
+        <div class="dias-header">
+          <div class="section-title">
+            <i class="fa-solid fa-umbrella-beach" aria-hidden="true"></i> Días de descanso
+          </div>
+          <button type="button" class="btn btn-secondary" id="btn-bloquear-dia">
+            <i class="fa-solid fa-calendar-xmark" aria-hidden="true"></i> Bloquear día(s)
+          </button>
+        </div>
+        <div class="chips" id="lista-dias-bloqueados"></div>
+      </div>
+
+      <!-- Filtros de lista -->
+      <div class="panel-toolbar">
+        <div class="subtabs" role="tablist">
+          <button type="button" class="subtab-btn active" data-modo="dia">Por día</button>
+          <button type="button" class="subtab-btn" data-modo="historico">Histórico completo</button>
+        </div>
+
+        <div class="toolbar-controls">
+          <select id="filtro-barbero-panel" aria-label="Filtrar por barbero">
+            <option value="">Todos los barberos</option>
+          </select>
+          <input type="date" id="filtro-fecha-barbero" aria-label="Filtrar por fecha">
+          <button type="button" class="btn btn-danger" id="btn-bloquear">
+            <i class="fa-solid fa-ban" aria-hidden="true"></i> Bloquear Hora
+          </button>
+        </div>
+      </div>
+
+      <!-- LISTA DE CITAS -->
+      <div class="cards-list" id="lista-citas-barbero"></div>
+    </section>
+  </main>
+
+  <!-- DIÁLOGO: BLOQUEAR HORA -->
+  <dialog id="dlg-bloqueo" aria-labelledby="dlg-bloqueo-titulo">
+    <form id="form-bloqueo" novalidate>
+      <h3 id="dlg-bloqueo-titulo"><i class="fa-solid fa-ban" aria-hidden="true"></i> Bloquear una hora</h3>
+      <div class="form-group">
+        <label for="bloq-barbero">Barbero</label>
+        <select id="bloq-barbero"></select>
+      </div>
+      <div class="form-group">
+        <label for="bloq-fecha">Fecha</label>
+        <input type="date" id="bloq-fecha" required>
+      </div>
+      <div class="form-group">
+        <label for="bloq-hora">Hora</label>
+        <select id="bloq-hora"></select>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" id="btn-bloq-cancelar">Cancelar</button>
+        <button type="submit" class="btn btn-danger">Bloquear</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- DIÁLOGO: BLOQUEAR DÍAS DE DESCANSO -->
+  <dialog id="dlg-dia" aria-labelledby="dlg-dia-titulo">
+    <form id="form-dia" novalidate>
+      <h3 id="dlg-dia-titulo"><i class="fa-solid fa-umbrella-beach" aria-hidden="true"></i> Bloquear días de descanso</h3>
+      <div class="form-group">
+        <label for="dia-barbero">Barbero</label>
+        <select id="dia-barbero">
+          <option value="todos">Todos los barberos</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="dia-desde">Desde</label>
+        <input type="date" id="dia-desde" required>
+      </div>
+      <div class="form-group">
+        <label for="dia-hasta">Hasta (opcional, para varios días)</label>
+        <input type="date" id="dia-hasta">
+      </div>
+      <p class="hint">Los clientes no podrán reservar esos días. Las citas ya agendadas se mantienen en tu lista hasta que las canceles.</p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" id="btn-dia-cancelar">Cancelar</button>
+        <button type="submit" class="btn btn-danger">Bloquear</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- MODAL PARA VER FOTOS EN TAMAÑO COMPLETO -->
+  <div id="modal-lightbox" class="modal-lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada">
+    <button type="button" class="modal-close-btn" aria-label="Cerrar foto">&times;</button>
+    <img id="img-ampliada" src="" alt="Foto ampliada">
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module">
+    'use strict';
+
+    /* =====================================================================
+       CONFIGURACIÓN
+       ===================================================================== */
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyDgI6b5BubDJBNadsSlcRUf-PAuFQfVXDM",
+      authDomain: "nowwer-barbershop.firebaseapp.com",
+      projectId: "nowwer-barbershop",
+      storageBucket: "nowwer-barbershop.firebasestorage.app",
+      messagingSenderId: "993864025507",
+      appId: "1:993864025507:web:65d060638226c7b185c616"
+    };
+    const FIREBASE_VERSION = "10.7.1";
+    const USAR_FIREBASE = !FIREBASE_CONFIG.apiKey.startsWith("TU_");
+
+    // Cuentas del personal SOLO para este modo demo (sin Firebase conectado).
+    // En producción, cada quien crea su propia cuenta y tú le das el rol una sola vez
+    // desde Firebase (Admin SDK), como quedó explicado en el paso a paso.
+    // TODO: reemplaza los correos de Osnayder y Santiago por los reales cuando los tengas.
+    const DEMO_STAFF = {
+      "nowwerbarbershop@gmail.com": { clave: "admin123",    barberoId: "barbero_1", admin: true  }, // dueño, ve todo
+      "osnayder@cambiar-correo.com": { clave: "osnayder123", barberoId: "barbero_2", admin: false },
+      "santiago@cambiar-correo.com": { clave: "santiago123", barberoId: "barbero_3", admin: false }
+    };
+
+    const WHATSAPP_NEGOCIO = "573148962096"; // número real del negocio, con código de país
+    const CODIGO_PAIS = "57";                // se agrega a teléfonos de 10 dígitos
+    const MAX_DIAS_BLOQUEO = 60;             // máximo de días por cada bloqueo
+
+    const BARBEROS = {
+      barbero_1: { nombre: "Nowwer",   esDueno: true },
+      barbero_2: { nombre: "Osnayder" },
+      barbero_3: { nombre: "Santiago" }
+    };
+
+    // Horario real del negocio por día de la semana (0=domingo … 6=sábado, como Date.getDay()).
+    // Cerrado los miércoles. Falta el descanso de almuerzo: en cuanto lo confirmen se agrega aquí.
+    const DURACION_TURNO_MIN = 60; // asumido en 1 hora; ajustable cuando lo confirmen
+    const HORARIO_SEMANA = {
+      0: { abre: "08:00", cierra: "19:00" }, // domingo
+      1: { abre: "08:00", cierra: "20:00" }, // lunes
+      2: { abre: "08:00", cierra: "20:00" }, // martes
+      3: null,                                // miércoles: no se trabaja
+      4: { abre: "08:00", cierra: "20:00" }, // jueves
+      5: { abre: "08:00", cierra: "20:00" }, // viernes
+      6: { abre: "08:00", cierra: "21:00" }  // sábado
+    };
+    const ESTADOS = ["pendiente", "completada", "cancelada", "bloqueada"];
+    const ESTADOS_QUE_OCUPAN = ["pendiente", "completada", "bloqueada"];
+
+    /* =====================================================================
+       UTILIDADES
+       ===================================================================== */
+    const $ = id => document.getElementById(id);
+    const pad = n => String(n).padStart(2, '0');
+
+    // Fecha LOCAL en formato YYYY-MM-DD (toISOString() devuelve UTC y falla de noche).
+    const fechaLocal = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+    // Suma n días a una fecha YYYY-MM-DD (usa mediodía para evitar saltos por horario de verano).
+    function sumarDias(fecha, n) {
+      const d = new Date(fecha + 'T12:00:00');
+      d.setDate(d.getDate() + n);
+      return fechaLocal(d);
+    }
+
+    // Turnos del día según el horario semanal real del negocio. [] si ese día no se trabaja.
+    function horasDelDia(fecha) {
+      const dia = new Date(fecha + 'T12:00:00').getDay();
+      const cfg = HORARIO_SEMANA[dia];
+      if (!cfg) return [];
+      const [h1, m1] = cfg.abre.split(':').map(Number);
+      const [h2, m2] = cfg.cierra.split(':').map(Number);
+      const fin = h2 * 60 + m2;
+      const horas = [];
+      for (let t = h1 * 60 + m1; t < fin; t += DURACION_TURNO_MIN) {
+        horas.push(`${pad(Math.floor(t / 60))}:${pad(t % 60)}`);
+      }
+      return horas;
+    }
+
+    // Lista de fechas entre desde y hasta (inclusive). Corta un poco después del máximo.
+    function rangoFechas(desde, hasta) {
+      const out = [];
+      for (let f = desde; f <= hasta && out.length <= MAX_DIAS_BLOQUEO; f = sumarDias(f, 1)) out.push(f);
+      return out;
+    }
+
+    function formatoFecha(f) {
+      return new Date(f + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' });
+    }
+
+    function horaPasada(fecha, hora) {
+      const hoy = fechaLocal();
+      if (fecha < hoy) return true;
+      if (fecha > hoy) return false;
+      const [h, m] = hora.split(':').map(Number);
+      const ahora = new Date();
+      return h * 60 + m <= ahora.getHours() * 60 + ahora.getMinutes();
+    }
+
+    // Devuelve solo dígitos con código de país, o null si no parece un teléfono válido.
+    function normalizarTelefono(valor) {
+      const d = String(valor).replace(/\D/g, '');
+      if (d.length === 10) return CODIGO_PAIS + d;
+      if (d.length >= 11 && d.length <= 15) return d;
+      return null;
+    }
+
+    const emailValido = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    const nombreBarbero = id => (BARBEROS[id] ? BARBEROS[id].nombre : id);
+    const crearId = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+
+    function el(tag, clase, texto) {
+      const n = document.createElement(tag);
+      if (clase) n.className = clase;
+      if (texto != null) n.textContent = texto;
+      return n;
+    }
+
+    function icono(clases) {
+      const i = document.createElement('i');
+      i.className = clases;
+      i.setAttribute('aria-hidden', 'true');
+      return i;
+    }
+
+    let toastTimer;
+    function avisar(mensaje, tipo = 'info') {
+      const t = $('toast');
+      t.textContent = mensaje;
+      t.className = `toast show ${tipo}`;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 4500);
+    }
+
+    function mensajeAuth(ex) {
+      const c = (ex && (ex.code || ex.message)) || '';
+      const credenciales = 'Correo o contraseña incorrectos.';
+      const usado = 'Ese correo ya tiene una cuenta. Inicia sesión.';
+      const mapa = {
+        'CREDENCIALES': credenciales,
+        'auth/invalid-credential': credenciales,
+        'auth/invalid-login-credentials': credenciales,
+        'auth/wrong-password': credenciales,
+        'auth/user-not-found': credenciales,
+        'EMAIL_EN_USO': usado,
+        'auth/email-already-in-use': usado,
+        'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+        'auth/invalid-email': 'El correo no es válido.',
+        'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.',
+        'auth/network-request-failed': 'Sin conexión. Revisa tu internet.',
+        'auth/operation-not-allowed': 'El acceso con correo y contraseña no está activado en Firebase.'
+      };
+      return mapa[c] || 'No se pudo completar la operación. Inténtalo de nuevo.';
+    }
+
+    /* =====================================================================
+       CAPA DE DATOS
+       Dos implementaciones con la misma interfaz:
+         - DemoStore: localStorage (sin servidor, solo para probar)
+         - FirebaseStore: Firestore + Auth (producción)
+       Un "usuario" es { uid, email, nombre, telefono, admin }.
+       ===================================================================== */
+
+    /* ---------- MODO DEMO ---------- */
+    const DemoStore = (() => {
+      const K = {
+        citas: 'barber_demo_citas',
+        dias: 'barber_demo_dias',
+        usuarios: 'barber_demo_usuarios',
+        sesion: 'barber_demo_sesion'
+      };
+      const oyentes = new Set();         // cambios en citas
+      const oyentesDias = new Set();     // cambios en días bloqueados
+      const oyentesSesion = new Set();
+      let citas = [], dias = [], usuarios = [];
+
+      const leer = (k, def) => {
+        try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) { /* ignorar */ }
+        return def;
+      };
+      const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignorar */ } };
+
+      function semilla() {
+        const hoy = fechaLocal();
+        const hace = n => { const d = new Date(); d.setDate(d.getDate() - n); return fechaLocal(d); };
+        return [
+          { id: 's1', clienteNombre: 'Carlos Gómez',    clienteTelefono: '573001234567', barberoId: 'barbero_1', fecha: hoy,      hora: '10:00', estado: 'pendiente' },
+          { id: 's2', clienteNombre: 'Andrés Restrepo', clienteTelefono: '573119876543', barberoId: 'barbero_1', fecha: hoy,      hora: '11:00', estado: 'completada' },
+          { id: 's3', clienteNombre: 'Mateo Silva',     clienteTelefono: '573205554433', barberoId: 'barbero_2', fecha: hace(9),  hora: '15:00', estado: 'completada' },
+          { id: 's4', clienteNombre: 'Juan David',      clienteTelefono: '573009998877', barberoId: 'barbero_1', fecha: hace(30), hora: '16:00', estado: 'completada' },
+          { id: 's5', clienteNombre: 'Felipe Duque',    clienteTelefono: '573187765544', barberoId: 'barbero_3', fecha: hoy,      hora: '09:00', estado: 'pendiente' }
+        ];
+      }
+
+      function cargar() {
+        const c = leer(K.citas, null);
+        if (c) { citas = c; } else { citas = semilla(); guardar(K.citas, citas); }
+        dias = leer(K.dias, []);
+        usuarios = leer(K.usuarios, []);
+      }
+
+      const emitir = () => oyentes.forEach(fn => fn());
+      const emitirDias = () => oyentesDias.forEach(fn => fn());
+      const ocupa = (b, f, h) => citas.some(c => c.barberoId === b && c.fecha === f && c.hora === h && ESTADOS_QUE_OCUPAN.includes(c.estado));
+      const diaBloq = (b, f) => dias.some(d => d.barberoId === b && d.fecha === f);
+
+      function usuarioActual() {
+        const id = leer(K.sesion, null);
+        if (!id) return null;
+        const staff = DEMO_STAFF[id];
+        if (staff) {
+          return {
+            uid: id, email: id, nombre: nombreBarbero(staff.barberoId), telefono: '',
+            admin: staff.admin === true, barberoId: staff.barberoId, esBarbero: true, verificado: true
+          };
+        }
+        const u = usuarios.find(x => x.uid === id);
+        return u
+          ? { uid: u.uid, email: u.email, nombre: u.nombre, telefono: u.telefono, admin: false, barberoId: null, esBarbero: false, verificado: u.verificado === true }
+          : null;
+      }
+
+      const emitirSesion = () => oyentesSesion.forEach(fn => fn(usuarioActual()));
+
+      function suscribir(set, fn) {
+        set.add(fn);
+        fn();
+        return () => set.delete(fn);
+      }
+
+      return {
+        modo: 'demo',
+
+        async init() {
+          cargar();
+          // Sincroniza pestañas del mismo navegador.
+          window.addEventListener('storage', e => {
+            if (!Object.values(K).includes(e.key)) return;
+            cargar();
+            emitir();
+            emitirDias();
+            if (e.key === K.sesion || e.key === K.usuarios) emitirSesion();
+          });
+        },
+
+        suscribirOcupados(cb) {
+          return suscribir(oyentes, () => cb(
+            citas.filter(c => ESTADOS_QUE_OCUPAN.includes(c.estado))
+                 .map(({ barberoId, fecha, hora }) => ({ barberoId, fecha, hora }))
+          ));
+        },
+
+        suscribirDiasBloqueados(cb) {
+          return suscribir(oyentesDias, () => cb(dias.map(d => ({ ...d }))));
+        },
+
+        suscribirCitas(cb, soloBarberoId) {
+          return suscribir(oyentes, () => cb(
+            citas.filter(c => !soloBarberoId || c.barberoId === soloBarberoId).map(c => ({ ...c }))
+          ));
+        },
+
+        async reservar(c) {
+          const u = usuarioActual();
+          if (!u) throw new Error('SIN_SESION');
+          if (!u.admin && !u.verificado) throw new Error('NO_VERIFICADO');
+          if (diaBloq(c.barberoId, c.fecha)) throw new Error('DIA_BLOQUEADO');
+          if (ocupa(c.barberoId, c.fecha, c.hora)) throw new Error('OCUPADO');
+          citas.push({ ...c, id: crearId(), estado: 'pendiente', creadaEn: Date.now() });
+          guardar(K.citas, citas);
+          emitir();
+        },
+
+        async bloquear(barberoId, fecha, hora) {
+          if (ocupa(barberoId, fecha, hora)) throw new Error('OCUPADO');
+          citas.push({ id: crearId(), clienteNombre: 'Horario bloqueado', clienteTelefono: '', barberoId, fecha, hora, estado: 'bloqueada' });
+          guardar(K.citas, citas);
+          emitir();
+        },
+
+        async cambiarEstado(cita, estado) {
+          const c = citas.find(x => x.id === cita.id);
+          if (c) { c.estado = estado; guardar(K.citas, citas); emitir(); }
+        },
+
+        async bloquearDias(barberoIds, fechas) {
+          barberoIds.forEach(b => fechas.forEach(f => {
+            if (!diaBloq(b, f)) dias.push({ barberoId: b, fecha: f });
+          }));
+          guardar(K.dias, dias);
+          emitirDias();
+        },
+
+        async desbloquearDias(barberoId, fechas) {
+          dias = dias.filter(d => !(d.barberoId === barberoId && fechas.includes(d.fecha)));
+          guardar(K.dias, dias);
+          emitirDias();
+        },
+
+        onSesion(cb) {
+          oyentesSesion.add(cb);
+          cb(usuarioActual());
+        },
+
+        async login(email, clave) {
+          const correo = email.trim().toLowerCase();
+          const staff = DEMO_STAFF[correo];
+          if (staff && staff.clave === clave) {
+            guardar(K.sesion, correo);
+            emitirSesion();
+            return;
+          }
+          const u = usuarios.find(x => x.email === correo && x.clave === clave);
+          if (!u) throw new Error('CREDENCIALES');
+          guardar(K.sesion, u.uid);
+          emitirSesion();
+        },
+
+        // En demo la contraseña queda en texto plano dentro de localStorage: SOLO PARA PRUEBAS.
+        async registrar({ nombre, telefono, email, clave }) {
+          const correo = email.trim().toLowerCase();
+          if (DEMO_STAFF[correo] || usuarios.some(u => u.email === correo)) throw new Error('EMAIL_EN_USO');
+          const u = { uid: crearId(), email: correo, clave, nombre, telefono, verificado: false };
+          usuarios.push(u);
+          guardar(K.usuarios, usuarios);
+          guardar(K.sesion, u.uid);
+          emitirSesion();
+        },
+
+        async recuperarClave() {
+          throw new Error('NO_DISPONIBLE_DEMO');
+        },
+
+        async reenviarVerificacion() {
+          throw new Error('NO_DISPONIBLE_DEMO');
+        },
+
+        async revisarVerificacion() {
+          const u = usuarioActual();
+          emitirSesion();
+          return !!(u && (u.admin || u.verificado));
+        },
+
+        // Solo demo: en producción el cliente verifica con el enlace que le llega al correo.
+        async simularVerificacion() {
+          const uid = leer(K.sesion, null);
+          const u = usuarios.find(x => x.uid === uid);
+          if (u) {
+            u.verificado = true;
+            guardar(K.usuarios, usuarios);
+            emitirSesion();
+          }
+        },
+
+        async logout() {
+          try { localStorage.removeItem(K.sesion); } catch (e) { /* ignorar */ }
+          emitirSesion();
+        }
+      };
+    })();
+
+    /* ---------- MODO PRODUCCIÓN (Firebase) ---------- */
+    const FirebaseStore = (() => {
+      let fb = {};
+      let registrando = null; // datos del perfil mientras se crea la cuenta
+      let cbSesion = null;    // para avisar a la app cuando cambie la verificación
+
+      // Un documento por (barbero, fecha, hora): su existencia = hora ocupada.
+      // Como el ID es determinista, dos clientes no pueden reservar la misma hora.
+      const slotId = (b, f, h) => `${b}_${f}_${h.replace(':', '')}`;
+      // Un documento por (barbero, fecha) = día de descanso.
+      const diaId = (b, f) => `${b}_${f}`;
+
+      // Arma el usuario de la app a partir del usuario de Firebase Auth.
+      // Los claims (admin: true, o barbero: true + barberoId) se asignan una sola vez
+      // desde el Admin SDK, como quedó explicado en el paso a paso de Firebase.
+      async function construirUsuario(user) {
+        const { fs, auth, db } = fb;
+        let admin = false, esBarbero = false, barberoId = null;
+        let nombre = user.displayName || user.email;
+        let telefono = '';
+        try {
+          const token = await auth.getIdTokenResult(user);
+          admin = token.claims.admin === true;
+          if (token.claims.barbero === true && token.claims.barberoId) {
+            esBarbero = true;
+            barberoId = token.claims.barberoId;
+          }
+          if (admin && token.claims.barberoId) barberoId = token.claims.barberoId; // el dueño también atiende citas
+        } catch (e) { console.error(e); }
+        if (admin) esBarbero = true;
+
+        if (registrando && registrando.email === user.email) {
+          nombre = registrando.nombre;
+          telefono = registrando.telefono;
+        } else if (esBarbero && barberoId) {
+          nombre = nombreBarbero(barberoId);
+        } else {
+          try {
+            const snap = await fs.getDoc(fs.doc(db, 'usuarios', user.uid));
+            if (snap.exists()) {
+              nombre = snap.data().nombre || nombre;
+              telefono = snap.data().telefono || '';
+            }
+          } catch (e) { console.error(e); }
+        }
+        return { uid: user.uid, email: user.email, nombre, telefono, admin, esBarbero, barberoId, verificado: esBarbero || user.emailVerified === true };
+      }
+
+      return {
+        modo: 'firebase',
+
+        async init() {
+          const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/`;
+          const [appMod, fs, auth] = await Promise.all([
+            import(base + 'firebase-app.js'),
+            import(base + 'firebase-firestore.js'),
+            import(base + 'firebase-auth.js')
+          ]);
+          const app = appMod.initializeApp(FIREBASE_CONFIG);
+          fb = { fs, auth, db: fs.getFirestore(app), au: auth.getAuth(app) };
+        },
+
+        // Público, sin datos personales: solo barbero, fecha y hora.
+        suscribirOcupados(cb) {
+          const { fs, db } = fb;
+          const q = fs.query(fs.collection(db, 'horarios'), fs.where('fecha', '>=', fechaLocal()));
+          return fs.onSnapshot(q,
+            snap => cb(snap.docs.map(d => {
+              const { barberoId, fecha, hora } = d.data();
+              return { barberoId, fecha, hora };
+            })),
+            err => { console.error(err); avisar('No se pudo cargar la disponibilidad.', 'error'); }
+          );
+        },
+
+        // Público: los clientes necesitan saber qué días no se atiende.
+        suscribirDiasBloqueados(cb) {
+          const { fs, db } = fb;
+          const q = fs.query(fs.collection(db, 'diasBloqueados'), fs.where('fecha', '>=', fechaLocal()));
+          return fs.onSnapshot(q,
+            snap => cb(snap.docs.map(d => {
+              const { barberoId, fecha } = d.data();
+              return { barberoId, fecha };
+            })),
+            err => { console.error(err); avisar('No se pudieron cargar los días bloqueados.', 'error'); }
+          );
+        },
+
+        // El dueño (claim admin) ve todas las citas; un empleado solo las suyas
+        // (la consulta debe traer ya filtrado, tal como lo exigen las reglas de Firestore).
+        suscribirCitas(cb, soloBarberoId) {
+          const { fs, db } = fb;
+          const base = fs.collection(db, 'citas');
+          const q = soloBarberoId ? fs.query(base, fs.where('barberoId', '==', soloBarberoId)) : base;
+          return fs.onSnapshot(q,
+            snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+            err => { console.error(err); avisar('No se pudieron cargar las citas.', 'error'); }
+          );
+        },
+
+        async reservar(c) {
+          const { fs, db } = fb;
+          const slotRef = fs.doc(db, 'horarios', slotId(c.barberoId, c.fecha, c.hora));
+          const diaRef = fs.doc(db, 'diasBloqueados', diaId(c.barberoId, c.fecha));
+          const citaRef = fs.doc(fs.collection(db, 'citas'));
+          await fs.runTransaction(db, async tx => {
+            const [slot, dia] = await Promise.all([tx.get(slotRef), tx.get(diaRef)]);
+            if (dia.exists()) throw new Error('DIA_BLOQUEADO');
+            if (slot.exists()) throw new Error('OCUPADO');
+            tx.set(slotRef, { barberoId: c.barberoId, fecha: c.fecha, hora: c.hora, tipo: 'cita', citaId: citaRef.id });
+            tx.set(citaRef, { ...c, estado: 'pendiente', creadaEn: fs.serverTimestamp() });
+          });
+        },
+
+        async bloquear(barberoId, fecha, hora) {
+          const { fs, db } = fb;
+          const slotRef = fs.doc(db, 'horarios', slotId(barberoId, fecha, hora));
+          const citaRef = fs.doc(fs.collection(db, 'citas'));
+          await fs.runTransaction(db, async tx => {
+            const snap = await tx.get(slotRef);
+            if (snap.exists()) throw new Error('OCUPADO');
+            tx.set(slotRef, { barberoId, fecha, hora, tipo: 'bloqueo', citaId: citaRef.id });
+            tx.set(citaRef, { clienteNombre: 'Horario bloqueado', clienteTelefono: '', barberoId, fecha, hora, estado: 'bloqueada', creadaEn: fs.serverTimestamp() });
+          });
+        },
+
+        async cambiarEstado(cita, estado) {
+          const { fs, db } = fb;
+          const batch = fs.writeBatch(db);
+          batch.update(fs.doc(db, 'citas', cita.id), { estado });
+          // Cancelar o liberar = la hora vuelve a estar disponible.
+          if (estado === 'cancelada') {
+            batch.delete(fs.doc(db, 'horarios', slotId(cita.barberoId, cita.fecha, cita.hora)));
+          }
+          await batch.commit();
+        },
+
+        async bloquearDias(barberoIds, fechas) {
+          const { fs, db } = fb;
+          const batch = fs.writeBatch(db);
+          barberoIds.forEach(b => fechas.forEach(f => {
+            batch.set(fs.doc(db, 'diasBloqueados', diaId(b, f)), { barberoId: b, fecha: f });
+          }));
+          await batch.commit();
+        },
+
+        async desbloquearDias(barberoId, fechas) {
+          const { fs, db } = fb;
+          const batch = fs.writeBatch(db);
+          fechas.forEach(f => batch.delete(fs.doc(db, 'diasBloqueados', diaId(barberoId, f))));
+          await batch.commit();
+        },
+
+        onSesion(cb) {
+          cbSesion = cb;
+          fb.auth.onAuthStateChanged(fb.au, async user => {
+            cb(user ? await construirUsuario(user) : null);
+          });
+        },
+
+        async reenviarVerificacion() {
+          const user = fb.au.currentUser;
+          if (!user) throw new Error('SIN_SESION');
+          await fb.auth.sendEmailVerification(user);
+        },
+
+        // Vuelve a preguntar a Firebase si el correo ya fue verificado y renueva el token,
+        // porque las reglas de Firestore leen "email_verified" desde el token.
+        async revisarVerificacion() {
+          const user = fb.au.currentUser;
+          if (!user) return false;
+          await fb.auth.reload(user);
+          await fb.auth.getIdToken(user, true);
+          const u = await construirUsuario(fb.au.currentUser);
+          if (cbSesion) cbSesion(u);
+          return u.verificado;
+        },
+
+        async login(email, clave) {
+          const { auth, au } = fb;
+          await auth.signInWithEmailAndPassword(au, email.trim(), clave);
+        },
+
+        async registrar({ nombre, telefono, email, clave }) {
+          const { fs, auth, au, db } = fb;
+          const correo = email.trim().toLowerCase();
+          registrando = { email: correo, nombre, telefono };
+          try {
+            const cred = await auth.createUserWithEmailAndPassword(au, correo, clave);
+            // Si el envío falla, el cliente puede pedirlo de nuevo con "Reenviar correo".
+            try { await auth.sendEmailVerification(cred.user); } catch (e) { console.error(e); }
+            await fs.setDoc(fs.doc(db, 'usuarios', cred.user.uid), { nombre, telefono });
+          } finally {
+            registrando = null;
+          }
+        },
+
+        async recuperarClave(email) {
+          await fb.auth.sendPasswordResetEmail(fb.au, email.trim());
+        },
+
+        async logout() {
+          await fb.auth.signOut(fb.au);
+        }
+      };
+    })();
+
+    const Store = USAR_FIREBASE ? FirebaseStore : DemoStore;
+
+    /* =====================================================================
+       ESTADO Y NAVEGACIÓN
+       ===================================================================== */
+    const estado = {
+      usuario: null,        // { uid, email, nombre, telefono, admin, barberoId, esBarbero } o null
+      admin: false,
+      esBarbero: false,
+      miBarberoId: null,
+      citas: [],
+      ocupados: [],
+      diasBloqueados: [],
+      horaSel: '',
+      modo: 'dia',          // 'dia' | 'historico'
+      vista: 'cliente'      // 'cliente' | 'login' | 'barbero'
+    };
+    let desuscribirCitas = null;
+
+    function mostrarVista(nombre) {
+      estado.vista = nombre;
+      const u = estado.usuario;
+
+      document.querySelectorAll('.view-section').forEach(s => s.classList.toggle('active', s.id === 'view-' + nombre));
+      $('btn-tab-cliente').classList.toggle('active', nombre === 'cliente');
+      $('btn-tab-barbero').classList.toggle('active', nombre === 'barbero');
+
+      const saludo = $('nav-saludo');
+      saludo.hidden = !u || estado.esBarbero;
+      saludo.textContent = u ? `Hola, ${String(u.nombre || u.email).split(' ')[0]}` : '';
+
+      $('btn-acceso').hidden = !!u || nombre === 'login';
+      $('btn-tab-cliente').hidden = !estado.esBarbero;
+      $('btn-tab-barbero').hidden = !estado.esBarbero;
+      $('btn-salir').hidden = !u;
+
+      if (nombre === 'barbero') renderPanel();
+    }
+
+    function abrirAcceso(tab = 'login') {
+      document.querySelectorAll('.auth-tab').forEach(b => b.classList.toggle('active', b.dataset.auth === tab));
+      $('form-login').hidden = tab !== 'login';
+      $('form-registro').hidden = tab !== 'registro';
+      $('login-error').textContent = '';
+      $('registro-error').textContent = '';
+      mostrarVista('login');
+    }
+
+    // Con sesión se ve el formulario de reserva; sin sesión, la invitación a entrar.
+    // Sin sesión: invitación a entrar. Con sesión pero sin correo verificado: pide verificar.
+    // Con correo verificado (o barbero): formulario de reserva.
+    function actualizarReserva() {
+      const u = estado.usuario;
+      const puedeReservar = !!u && (u.admin || u.verificado);
+      $('reserva-login').hidden = !!u;
+      $('reserva-verificar').hidden = !(u && !puedeReservar);
+      $('reserva-box').hidden = !puedeReservar;
+      if (u && !puedeReservar) $('verificar-correo').textContent = u.email;
+    }
+
+    function limpiarFormularioReserva() {
+      $('form-reserva').reset();
+      $('confirmacion').hidden = true;
+      estado.horaSel = '';
+      renderHorarios();
+    }
+
+    function alCambiarSesion(usuario) {
+      const uidAntes = estado.usuario ? estado.usuario.uid : null;
+      const uidAhora = usuario ? usuario.uid : null;
+      const cambio = uidAntes !== uidAhora;
+      const faltabaVerificar = !!estado.usuario && !estado.usuario.esBarbero && !estado.usuario.verificado;
+
+      estado.usuario = usuario;
+      estado.admin = !!(usuario && usuario.admin);
+      estado.esBarbero = !!(usuario && usuario.esBarbero);
+      estado.miBarberoId = usuario ? usuario.barberoId : null;
+
+      if (desuscribirCitas) { desuscribirCitas(); desuscribirCitas = null; }
+      if (estado.esBarbero) {
+        const soloMio = estado.admin ? undefined : estado.miBarberoId;
+        desuscribirCitas = Store.suscribirCitas(lista => {
+          estado.citas = lista;
+          renderPanel();
+        }, soloMio);
+      } else {
+        estado.citas = [];
+      }
+
+      if (cambio) {
+        limpiarFormularioReserva();
+        if (usuario) {
+          // Los datos de la cuenta se cargan solos en el formulario de reserva.
+          if (!usuario.esBarbero) {
+            $('cliente-nombre').value = usuario.nombre || '';
+            $('cliente-telefono').value = usuario.telefono ? '+' + usuario.telefono : '';
+          }
+          mostrarVista(usuario.esBarbero ? 'barbero' : 'cliente');
+        } else {
+          mostrarVista(estado.vista === 'barbero' ? 'cliente' : estado.vista);
+        }
+      } else {
+        mostrarVista(estado.vista);
+      }
+      actualizarReserva();
+
+      if (!cambio && faltabaVerificar && usuario && usuario.verificado) {
+        avisar('¡Correo verificado! Ya puedes reservar tu cita.');
+      }
+    }
+
+    /* =====================================================================
+       ACCESO: LOGIN, REGISTRO, RECUPERAR CONTRASEÑA
+       ===================================================================== */
+    async function enviarLogin(e) {
+      e.preventDefault();
+      const err = $('login-error');
+      const email = $('login-email').value.trim();
+      const clave = $('login-pass').value;
+      err.textContent = '';
+      if (!email || !clave) { err.textContent = 'Escribe tu correo y tu contraseña.'; return; }
+
+      const btn = $('btn-login');
+      btn.disabled = true;
+      try {
+        await Store.login(email, clave);
+        $('login-pass').value = '';
+      } catch (ex) {
+        err.textContent = mensajeAuth(ex);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function enviarRegistro(e) {
+      e.preventDefault();
+      const err = $('registro-error');
+      const nombre = $('reg-nombre').value.trim();
+      const telefono = normalizarTelefono($('reg-telefono').value);
+      const email = $('reg-email').value.trim();
+      const clave = $('reg-pass').value;
+      err.textContent = '';
+
+      if (nombre.length < 2) { err.textContent = 'Escribe tu nombre completo.'; return; }
+      if (!telefono) { err.textContent = 'Ingresa un teléfono válido, por ejemplo 3001234567.'; return; }
+      if (!emailValido(email)) { err.textContent = 'Ingresa un correo válido.'; return; }
+      if (clave.length < 6) { err.textContent = 'La contraseña debe tener al menos 6 caracteres.'; return; }
+
+      const btn = $('btn-registro');
+      btn.disabled = true;
+      try {
+        await Store.registrar({ nombre, telefono, email, clave });
+        $('form-registro').reset();
+        avisar(Store.modo === 'demo'
+          ? '¡Cuenta creada! En modo demo, simula la verificación del correo para reservar.'
+          : '¡Cuenta creada! Te enviamos un correo: verifícalo para poder reservar.');
+      } catch (ex) {
+        console.error(ex);
+        err.textContent = mensajeAuth(ex);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function olvideClave() {
+      const err = $('login-error');
+      const email = $('login-email').value.trim();
+      err.textContent = '';
+      if (!emailValido(email)) {
+        err.textContent = 'Escribe tu correo arriba y vuelve a pulsar "¿Olvidaste tu contraseña?".';
+        return;
+      }
+      try {
+        await Store.recuperarClave(email);
+        avisar('Te enviamos un correo para restablecer tu contraseña.');
+      } catch (ex) {
+        err.textContent = ex && ex.message === 'NO_DISPONIBLE_DEMO'
+          ? 'En modo demo no se puede recuperar la contraseña.'
+          : mensajeAuth(ex);
+      }
+    }
+
+    /* =====================================================================
+       VERIFICACIÓN DE CORREO
+       ===================================================================== */
+    async function verificarAhora() {
+      const btn = $('btn-verificado');
+      btn.disabled = true;
+      try {
+        const ok = await Store.revisarVerificacion();
+        if (!ok) avisar('Aún no vemos tu correo verificado. Abre el enlace que te enviamos y vuelve a pulsar este botón.', 'error');
+      } catch (err) {
+        console.error(err);
+        avisar('No se pudo comprobar la verificación. Inténtalo de nuevo.', 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    let cuentaAtras = null;
+    async function reenviarCorreo() {
+      const btn = $('btn-reenviar');
+      btn.disabled = true;
+      try {
+        await Store.reenviarVerificacion();
+        avisar('Te enviamos un nuevo correo de verificación.');
+        // Pausa de 30 s para no chocar con el límite de envíos de Firebase.
+        let seg = 30;
+        btn.textContent = `Reenviar correo (${seg}s)`;
+        clearInterval(cuentaAtras);
+        cuentaAtras = setInterval(() => {
+          seg -= 1;
+          if (seg <= 0) {
+            clearInterval(cuentaAtras);
+            btn.textContent = 'Reenviar correo';
+            btn.disabled = false;
+          } else {
+            btn.textContent = `Reenviar correo (${seg}s)`;
+          }
+        }, 1000);
+      } catch (err) {
+        btn.disabled = false;
+        if (err && err.message === 'NO_DISPONIBLE_DEMO') {
+          avisar('En modo demo no se envían correos. Usa "Simular verificación".', 'error');
+        } else {
+          console.error(err);
+          avisar(mensajeAuth(err), 'error');
+        }
+      }
+    }
+
+    // Al volver a la pestaña (por ejemplo, después de abrir el enlace del correo) se comprueba solo.
+    function comprobarAlVolver() {
+      const u = estado.usuario;
+      if (document.visibilityState !== 'visible' || !u || u.admin || u.verificado) return;
+      Store.revisarVerificacion().catch(err => console.error(err));
+    }
+
+    /* =====================================================================
+       VISTA CLIENTE
+       ===================================================================== */
+    function poblarBarberos() {
+      const destinos = [$('select-barbero'), $('filtro-barbero-panel'), $('bloq-barbero'), $('dia-barbero')];
+      destinos.forEach(select => {
+        Object.entries(BARBEROS).forEach(([id, b]) => {
+          const op = document.createElement('option');
+          op.value = id;
+          op.textContent = b.nombre;
+          select.appendChild(op);
+        });
+      });
+    }
+
+    const diaBloqueado = (barberoId, fecha) =>
+      estado.diasBloqueados.some(d => d.barberoId === barberoId && d.fecha === fecha);
+
+    function mensajeHorarios(texto, advertencia) {
+      return el('small', 'slots-msg' + (advertencia ? ' warn' : ''), texto);
+    }
+
+    function renderHorarios() {
+      const grid = $('grid-horarios');
+      const barberoId = $('select-barbero').value;
+      const fecha = $('select-fecha').value;
+      grid.replaceChildren();
+
+      if (!barberoId || !fecha) {
+        grid.appendChild(mensajeHorarios('Selecciona barbero y fecha...'));
+        estado.horaSel = '';
+        return;
+      }
+
+      // El negocio no atiende ese día de la semana (por ahora, los miércoles).
+      const horas = horasDelDia(fecha);
+      if (horas.length === 0) {
+        grid.appendChild(mensajeHorarios('Ese día no atendemos. Elige otra fecha.', true));
+        estado.horaSel = '';
+        return;
+      }
+
+      // Día de descanso del barbero: no hay horas para elegir.
+      if (diaBloqueado(barberoId, fecha)) {
+        grid.appendChild(mensajeHorarios(`${nombreBarbero(barberoId)} no atiende ese día. Elige otra fecha u otro barbero.`, true));
+        estado.horaSel = '';
+        return;
+      }
+
+      const ocupadas = new Set(
+        estado.ocupados.filter(o => o.barberoId === barberoId && o.fecha === fecha).map(o => o.hora)
+      );
+
+      // Si alguien más tomó la hora que yo tenía elegida, se avisa y se limpia.
+      if (estado.horaSel && ocupadas.has(estado.horaSel)) {
+        estado.horaSel = '';
+        avisar('Esa hora acaba de ser tomada. Elige otra.', 'error');
+      }
+
+      horas.forEach(hora => {
+        const btn = el('button', 'slot-btn', hora);
+        btn.type = 'button';
+
+        if (ocupadas.has(hora) || horaPasada(fecha, hora)) {
+          btn.classList.add('blocked');
+          btn.disabled = true;
+          btn.setAttribute('aria-label', `${hora}, no disponible`);
+        } else {
+          const elegida = hora === estado.horaSel;
+          btn.classList.toggle('selected', elegida);
+          btn.setAttribute('aria-pressed', String(elegida));
+          btn.addEventListener('click', () => {
+            estado.horaSel = hora;
+            grid.querySelectorAll('.slot-btn').forEach(b => {
+              b.classList.remove('selected');
+              if (!b.disabled) b.setAttribute('aria-pressed', 'false');
+            });
+            btn.classList.add('selected');
+            btn.setAttribute('aria-pressed', 'true');
+          });
+        }
+        grid.appendChild(btn);
+      });
+    }
+
+    // Al cambiar barbero o fecha la hora elegida deja de ser válida.
+    function cambioSeleccion() {
+      estado.horaSel = '';
+      renderHorarios();
+    }
+
+    function mostrarConfirmacion(cita) {
+      const box = $('confirmacion');
+      box.replaceChildren();
+      box.appendChild(el('strong', null, '¡Tu cita ha sido agendada con éxito!'));
+      box.appendChild(el('span', null, `${nombreBarbero(cita.barberoId)} · ${cita.fecha} · ${cita.hora}`));
+
+      const texto = `Hola, soy ${cita.clienteNombre}. Reservé una cita con ${nombreBarbero(cita.barberoId)} el ${cita.fecha} a las ${cita.hora}.`;
+      const a = el('a');
+      a.href = `https://wa.me/${WHATSAPP_NEGOCIO}?text=${encodeURIComponent(texto)}`;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.append(icono('fa-brands fa-whatsapp'), ' Avisar por WhatsApp');
+      box.appendChild(a);
+
+      box.hidden = false;
+      box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    async function enviarReserva(e) {
+      e.preventDefault();
+
+      if (!estado.usuario) {
+        avisar('Inicia sesión para reservar tu cita.', 'error');
+        abrirAcceso('login');
+        return;
+      }
+
+      if (!estado.usuario.admin && !estado.usuario.verificado) {
+        avisar('Verifica tu correo para poder reservar.', 'error');
+        actualizarReserva();
+        return;
+      }
+
+      const nombre = $('cliente-nombre').value.trim();
+      const telefono = normalizarTelefono($('cliente-telefono').value);
+      const barberoId = $('select-barbero').value;
+      const fecha = $('select-fecha').value;
+      const hora = estado.horaSel;
+
+      if (nombre.length < 2) return avisar('Escribe tu nombre completo.', 'error');
+      if (!telefono) return avisar('Ingresa un teléfono válido, por ejemplo 3001234567.', 'error');
+      if (!barberoId) return avisar('Selecciona un barbero.', 'error');
+      if (!fecha) return avisar('Selecciona una fecha.', 'error');
+      if (diaBloqueado(barberoId, fecha)) return avisar(`${nombreBarbero(barberoId)} no atiende ese día.`, 'error');
+      if (!hora) return avisar('Por favor selecciona una hora disponible.', 'error');
+      if (horaPasada(fecha, hora)) {
+        estado.horaSel = '';
+        renderHorarios();
+        return avisar('Esa hora ya pasó. Elige otra.', 'error');
+      }
+
+      const btn = $('btn-reservar');
+      btn.disabled = true;
+      try {
+        const cita = { clienteNombre: nombre, clienteTelefono: telefono, barberoId, fecha, hora, uid: estado.usuario.uid };
+        await Store.reservar(cita);
+        estado.horaSel = '';
+        renderHorarios();
+        mostrarConfirmacion(cita);
+      } catch (err) {
+        const codigo = err && err.message;
+        if (codigo === 'OCUPADO') {
+          avisar('Esa hora acaba de ser tomada. Elige otra.', 'error');
+          estado.horaSel = '';
+          renderHorarios();
+        } else if (codigo === 'DIA_BLOQUEADO') {
+          avisar(`${nombreBarbero(barberoId)} no atiende ese día.`, 'error');
+          estado.horaSel = '';
+          renderHorarios();
+        } else if (codigo === 'NO_VERIFICADO' || (err && err.code === 'permission-denied')) {
+          avisar('No se pudo confirmar tu cita. Verifica tu correo (o vuelve a iniciar sesión) e inténtalo de nuevo.', 'error');
+          Store.revisarVerificacion().catch(() => {});
+        } else if (codigo === 'SIN_SESION') {
+          avisar('Inicia sesión para reservar tu cita.', 'error');
+          abrirAcceso('login');
+        } else {
+          console.error(err);
+          avisar('No se pudo guardar la cita. Revisa tu conexión e inténtalo de nuevo.', 'error');
+        }
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    /* Galería */
+    function ampliarFoto(item) {
+      const img = item.querySelector('img');
+      $('img-ampliada').src = img.src.replace('w=600', 'w=1200');
+      $('img-ampliada').alt = img.alt;
+      $('modal-lightbox').style.display = 'flex';
+      $('modal-lightbox').querySelector('.modal-close-btn').focus();
+    }
+
+    function cerrarFoto() {
+      $('modal-lightbox').style.display = 'none';
+    }
+
+    /* =====================================================================
+       PANEL DEL BARBERO
+       ===================================================================== */
+    function filtroActivoBarbero() {
+      return estado.admin ? $('filtro-barbero-panel').value : estado.miBarberoId;
+    }
+
+    function renderPanel() {
+      if (!estado.esBarbero) return;
+
+      $('filtro-barbero-panel').hidden = !estado.admin;
+      const sub = $('panel-subtitulo');
+      sub.hidden = estado.admin;
+      if (!estado.admin) sub.textContent = `Viendo la agenda de ${nombreBarbero(estado.miBarberoId)}`;
+
+      const hoy = fechaLocal();
+      const filtroBarbero = filtroActivoBarbero();
+      const todas = estado.citas.filter(c => !filtroBarbero || c.barberoId === filtroBarbero);
+
+      // Los contadores solo cuentan citas reales (sin bloqueos ni canceladas).
+      const reales = todas.filter(c => c.estado !== 'bloqueada' && c.estado !== 'cancelada');
+      const deHoy = reales.filter(c => c.fecha === hoy);
+      $('cnt-historico-total').textContent = reales.length;
+      $('cnt-totales').textContent = deHoy.length;
+      $('cnt-pendientes').textContent = deHoy.filter(c => c.estado === 'pendiente').length;
+      $('cnt-completadas').textContent = deHoy.filter(c => c.estado === 'completada').length;
+
+      renderDiasBloqueados();
+
+      let lista;
+      let avisos = [];
+      if (estado.modo === 'dia') {
+        const fecha = $('filtro-fecha-barbero').value || hoy;
+        lista = todas.filter(c => c.fecha === fecha).sort((a, b) => a.hora.localeCompare(b.hora));
+        avisos = estado.diasBloqueados.filter(d => d.fecha === fecha && (!filtroBarbero || d.barberoId === filtroBarbero));
+      } else {
+        lista = [...todas].sort((a, b) => b.fecha.localeCompare(a.fecha) || a.hora.localeCompare(b.hora));
+      }
+
+      const cont = $('lista-citas-barbero');
+      cont.replaceChildren();
+
+      avisos.forEach(d => cont.appendChild(tarjetaDiaBloqueado(d)));
+
+      if (lista.length === 0 && avisos.length === 0) {
+        cont.appendChild(el('p', 'empty-msg', 'No hay citas registradas en este período.'));
+        return;
+      }
+      lista.forEach(c => cont.appendChild(tarjetaCita(c)));
+    }
+
+    // Agrupa días consecutivos del mismo barbero: [{ barberoId, desde, hasta, dias[] }]
+    function agruparDias(lista) {
+      const porBarbero = {};
+      lista.forEach(d => {
+        if (!porBarbero[d.barberoId]) porBarbero[d.barberoId] = [];
+        porBarbero[d.barberoId].push(d.fecha);
+      });
+
+      const grupos = [];
+      Object.keys(porBarbero).forEach(barberoId => {
+        let actual = null;
+        porBarbero[barberoId].sort().forEach(f => {
+          if (actual && sumarDias(actual.hasta, 1) === f) {
+            actual.hasta = f;
+            actual.dias.push(f);
+          } else {
+            actual = { barberoId, desde: f, hasta: f, dias: [f] };
+            grupos.push(actual);
+          }
+        });
+      });
+      return grupos.sort((a, b) => a.desde.localeCompare(b.desde) || a.barberoId.localeCompare(b.barberoId));
+    }
+
+    function renderDiasBloqueados() {
+      const cont = $('lista-dias-bloqueados');
+      cont.replaceChildren();
+
+      const hoy = fechaLocal();
+      const filtroBarbero = filtroActivoBarbero();
+      const lista = estado.diasBloqueados.filter(d => d.fecha >= hoy && (!filtroBarbero || d.barberoId === filtroBarbero));
+
+      if (lista.length === 0) {
+        cont.appendChild(el('p', 'empty-msg', 'No hay días bloqueados. Usa "Bloquear día(s)" para marcar tu descanso.'));
+        return;
+      }
+
+      agruparDias(lista).forEach(g => {
+        const rango = g.desde === g.hasta ? formatoFecha(g.desde) : `${formatoFecha(g.desde)} – ${formatoFecha(g.hasta)}`;
+        const chip = el('div', 'chip');
+        chip.append(icono('fa-solid fa-calendar-xmark'), el('span', null, `${rango} · ${nombreBarbero(g.barberoId)}`));
+
+        const quitar = el('button', 'chip-btn');
+        quitar.type = 'button';
+        quitar.title = 'Quitar bloqueo';
+        quitar.setAttribute('aria-label', `Quitar bloqueo: ${rango}, ${nombreBarbero(g.barberoId)}`);
+        quitar.appendChild(icono('fa-solid fa-xmark'));
+        quitar.addEventListener('click', () => quitarBloqueoDias(g));
+        chip.appendChild(quitar);
+
+        cont.appendChild(chip);
+      });
+    }
+
+    async function quitarBloqueoDias(g) {
+      const detalle = g.dias.length === 1
+        ? formatoFecha(g.desde)
+        : `${g.dias.length} días (${formatoFecha(g.desde)} – ${formatoFecha(g.hasta)})`;
+      if (!confirm(`¿Quitar el bloqueo de ${nombreBarbero(g.barberoId)}: ${detalle}? Los clientes podrán volver a reservar.`)) return;
+      try {
+        await Store.desbloquearDias(g.barberoId, g.dias);
+        avisar('Bloqueo quitado.');
+      } catch (err) {
+        console.error(err);
+        avisar('No se pudo quitar el bloqueo.', 'error');
+      }
+    }
+
+    function tarjetaDiaBloqueado(d) {
+      const card = el('div', 'card card-descanso');
+
+      const info = el('div', 'card-info');
+      const h3 = el('h3');
+      h3.append('Día de descanso ', el('span', 'badge badge-bloqueada', 'bloqueado'));
+      const p = el('p');
+      p.append(icono('fa-solid fa-user-ninja'), ` ${nombreBarbero(d.barberoId)} no atiende este día`);
+      info.append(h3, p);
+
+      const acciones = el('div', 'card-actions');
+      acciones.appendChild(botonAccion('fa-solid fa-lock-open', 'var(--warning)', 'Quitar bloqueo del día', async () => {
+        try {
+          await Store.desbloquearDias(d.barberoId, [d.fecha]);
+          avisar('Bloqueo quitado.');
+        } catch (err) {
+          console.error(err);
+          avisar('No se pudo quitar el bloqueo.', 'error');
+        }
+      }));
+
+      card.append(info, acciones);
+      return card;
+    }
+
+    function tarjetaCita(c) {
+      const est = ESTADOS.includes(c.estado) ? c.estado : 'pendiente';
+      const tel = String(c.clienteTelefono || '').replace(/\D/g, '');
+
+      const card = el('div', 'card');
+
+      const info = el('div', 'card-info');
+      const h3 = el('h3');
+      h3.append(`${c.hora} - ${c.clienteNombre} `, el('span', `badge badge-${est}`, est));
+      const p = el('p');
+      p.append(icono('fa-solid fa-calendar'), ` ${c.fecha} | `, icono('fa-solid fa-user-ninja'), ` ${nombreBarbero(c.barberoId)}`);
+      if (est !== 'bloqueada' && tel) {
+        p.append(' | ', icono('fa-solid fa-phone'), ` +${tel}`);
+      }
+      info.append(h3, p);
+
+      const acciones = el('div', 'card-actions');
+
+      if (est === 'pendiente') {
+        acciones.append(
+          botonAccion('fa-solid fa-check', 'var(--success)', 'Marcar como completada', () => actualizarCita(c, 'completada')),
+          botonAccion('fa-solid fa-xmark', 'var(--danger)', 'Cancelar cita', () => {
+            if (confirm(`¿Cancelar la cita de ${c.clienteNombre} a las ${c.hora}?`)) actualizarCita(c, 'cancelada');
+          })
+        );
+      }
+      if (est === 'bloqueada') {
+        acciones.append(
+          botonAccion('fa-solid fa-lock-open', 'var(--warning)', 'Liberar hora', () => actualizarCita(c, 'cancelada'))
+        );
+      }
+      if (est !== 'bloqueada' && tel) {
+        const wa = el('a', 'action-btn');
+        wa.href = `https://wa.me/${tel}`;
+        wa.target = '_blank';
+        wa.rel = 'noopener noreferrer';
+        wa.style.color = '#25D366';
+        wa.setAttribute('aria-label', `Escribir por WhatsApp a ${c.clienteNombre}`);
+        wa.appendChild(icono('fa-brands fa-whatsapp'));
+        acciones.appendChild(wa);
+      }
+
+      card.append(info, acciones);
+      return card;
+    }
+
+    function botonAccion(claseIcono, color, etiqueta, onClick) {
+      const b = el('button', 'action-btn');
+      b.type = 'button';
+      b.style.color = color;
+      b.title = etiqueta;
+      b.setAttribute('aria-label', etiqueta);
+      b.appendChild(icono(claseIcono));
+      b.addEventListener('click', onClick);
+      return b;
+    }
+
+    async function actualizarCita(cita, nuevoEstado) {
+      try {
+        await Store.cambiarEstado(cita, nuevoEstado);
+      } catch (err) {
+        console.error(err);
+        avisar('No se pudo actualizar la cita.', 'error');
+      }
+    }
+
+    /* ---------- Bloquear una hora ---------- */
+    function actualizarHorasBloqueo() {
+      const sel = $('bloq-hora');
+      const actual = sel.value;
+      sel.replaceChildren();
+      horasDelDia($('bloq-fecha').value).forEach(h => {
+        const op = document.createElement('option');
+        op.value = h;
+        op.textContent = h;
+        sel.appendChild(op);
+      });
+      if ([...sel.options].some(o => o.value === actual)) sel.value = actual;
+    }
+
+    function abrirBloqueo() {
+      const propio = !estado.admin;
+      $('bloq-barbero').value = propio ? estado.miBarberoId : ($('filtro-barbero-panel').value || Object.keys(BARBEROS)[0]);
+      $('bloq-barbero').disabled = propio;
+      $('bloq-fecha').value = $('filtro-fecha-barbero').value || fechaLocal();
+      $('bloq-fecha').min = fechaLocal();
+      actualizarHorasBloqueo();
+      $('dlg-bloqueo').showModal();
+    }
+
+    async function enviarBloqueo(e) {
+      e.preventDefault();
+      const barberoId = $('bloq-barbero').value;
+      const fecha = $('bloq-fecha').value;
+      const hora = $('bloq-hora').value;
+      if (!fecha) return avisar('Selecciona una fecha.', 'error');
+      if (!hora) return avisar('Ese día no atendemos; elige otra fecha.', 'error');
+
+      try {
+        await Store.bloquear(barberoId, fecha, hora);
+        $('dlg-bloqueo').close();
+        avisar(`Bloqueado: ${nombreBarbero(barberoId)}, ${fecha} a las ${hora}.`);
+      } catch (err) {
+        if (err && err.message === 'OCUPADO') {
+          avisar('Esa hora ya está ocupada o bloqueada.', 'error');
+        } else {
+          console.error(err);
+          avisar('No se pudo bloquear la hora.', 'error');
+        }
+      }
+    }
+
+    /* ---------- Bloquear días de descanso ---------- */
+    function abrirBloqueoDia() {
+      const hoy = fechaLocal();
+      const propio = !estado.admin;
+      $('dia-barbero').value = propio ? estado.miBarberoId : ($('filtro-barbero-panel').value || Object.keys(BARBEROS)[0]);
+      $('dia-barbero').disabled = propio;
+      $('dia-desde').value = $('filtro-fecha-barbero').value >= hoy ? $('filtro-fecha-barbero').value : hoy;
+      $('dia-hasta').value = '';
+      $('dia-desde').min = hoy;
+      $('dia-hasta').min = $('dia-desde').value;
+      $('dlg-dia').showModal();
+    }
+
+    async function enviarBloqueoDia(e) {
+      e.preventDefault();
+      const seleccion = $('dia-barbero').value;
+      const desde = $('dia-desde').value;
+      const hasta = $('dia-hasta').value || desde;
+
+      if (!desde) return avisar('Selecciona la fecha del descanso.', 'error');
+      if (desde < fechaLocal()) return avisar('No puedes bloquear fechas pasadas.', 'error');
+      if (hasta < desde) return avisar('La fecha final no puede ser anterior a la inicial.', 'error');
+
+      const fechas = rangoFechas(desde, hasta);
+      if (fechas.length > MAX_DIAS_BLOQUEO) return avisar(`Puedes bloquear máximo ${MAX_DIAS_BLOQUEO} días por vez.`, 'error');
+
+      const barberos = seleccion === 'todos' ? Object.keys(BARBEROS) : [seleccion];
+
+      // Las citas ya agendadas no se borran: se avisa para que el barbero decida.
+      const conflictos = estado.citas.filter(c =>
+        c.estado === 'pendiente' && barberos.includes(c.barberoId) && fechas.includes(c.fecha)
+      ).length;
+      if (conflictos > 0) {
+        const ok = confirm(
+          `Hay ${conflictos} cita(s) pendiente(s) en ese período. ` +
+          'Seguirán en tu lista para que las canceles o las avises por WhatsApp. ¿Bloquear de todos modos?'
+        );
+        if (!ok) return;
+      }
+
+      try {
+        await Store.bloquearDias(barberos, fechas);
+        $('dlg-dia').close();
+        const quien = seleccion === 'todos' ? 'todos los barberos' : nombreBarbero(seleccion);
+        avisar(`Descanso bloqueado: ${fechas.length} día(s) para ${quien}.`);
+      } catch (err) {
+        console.error(err);
+        avisar('No se pudo bloquear el día. Inténtalo de nuevo.', 'error');
+      }
+    }
+
+    /* =====================================================================
+       INICIO
+       ===================================================================== */
+    function conectarEventos() {
+      // Navegación
+      $('btn-acceso').addEventListener('click', () => abrirAcceso('login'));
+      document.querySelectorAll('.btn-volver').forEach(b => b.addEventListener('click', () => mostrarVista('cliente')));
+      $('btn-tab-cliente').addEventListener('click', () => mostrarVista('cliente'));
+      $('btn-tab-barbero').addEventListener('click', () => mostrarVista('barbero'));
+      $('btn-salir').addEventListener('click', async () => {
+        try { await Store.logout(); } catch (err) { console.error(err); avisar('No se pudo cerrar sesión.', 'error'); }
+      });
+
+      // Acceso
+      document.querySelectorAll('.auth-tab').forEach(b => b.addEventListener('click', () => abrirAcceso(b.dataset.auth)));
+      $('btn-gate-login').addEventListener('click', () => abrirAcceso('login'));
+      $('btn-gate-registro').addEventListener('click', () => abrirAcceso('registro'));
+      $('form-login').addEventListener('submit', enviarLogin);
+      $('form-registro').addEventListener('submit', enviarRegistro);
+      $('btn-olvide').addEventListener('click', olvideClave);
+
+      // Verificación de correo
+      $('btn-verificado').addEventListener('click', verificarAhora);
+      $('btn-reenviar').addEventListener('click', reenviarCorreo);
+      $('btn-simular-verif').addEventListener('click', () => Store.simularVerificacion());
+      document.addEventListener('visibilitychange', comprobarAlVolver);
+      window.addEventListener('focus', comprobarAlVolver);
+
+      // Reserva
+      $('select-barbero').addEventListener('change', cambioSeleccion);
+      $('select-fecha').addEventListener('change', cambioSeleccion);
+      $('form-reserva').addEventListener('submit', enviarReserva);
+
+      // Galería y visor
+      document.querySelectorAll('.gallery-item').forEach(item => {
+        item.addEventListener('click', () => ampliarFoto(item));
+        item.addEventListener('keydown', ev => {
+          if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ampliarFoto(item); }
+        });
+      });
+      $('modal-lightbox').addEventListener('click', cerrarFoto);
+      document.addEventListener('keydown', ev => { if (ev.key === 'Escape') cerrarFoto(); });
+
+      // Panel barbero
+      document.querySelectorAll('#view-barbero .subtab-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          estado.modo = b.dataset.modo;
+          document.querySelectorAll('#view-barbero .subtab-btn').forEach(x => x.classList.toggle('active', x === b));
+          $('filtro-fecha-barbero').hidden = estado.modo === 'historico';
+          renderPanel();
+        });
+      });
+      $('filtro-fecha-barbero').addEventListener('change', renderPanel);
+      $('filtro-barbero-panel').addEventListener('change', renderPanel);
+
+      $('btn-bloquear').addEventListener('click', abrirBloqueo);
+      $('btn-bloq-cancelar').addEventListener('click', () => $('dlg-bloqueo').close());
+      $('bloq-fecha').addEventListener('change', actualizarHorasBloqueo);
+      $('form-bloqueo').addEventListener('submit', enviarBloqueo);
+
+      $('btn-bloquear-dia').addEventListener('click', abrirBloqueoDia);
+      $('btn-dia-cancelar').addEventListener('click', () => $('dlg-dia').close());
+      $('dia-desde').addEventListener('change', () => { $('dia-hasta').min = $('dia-desde').value; });
+      $('form-dia').addEventListener('submit', enviarBloqueoDia);
+    }
+
+    async function iniciar() {
+      poblarBarberos();
+
+      const hoy = fechaLocal();
+      $('select-fecha').min = hoy;
+      $('filtro-fecha-barbero').value = hoy;
+
+      conectarEventos();
+      mostrarVista('cliente');
+      actualizarReserva();
+
+      if (!USAR_FIREBASE) {
+        $('banner-demo').hidden = false;
+        $('demo-hint').hidden = false;
+        $('verificar-demo').hidden = false;
+      }
+
+      try {
+        await Store.init();
+      } catch (err) {
+        console.error(err);
+        const b = $('banner-error');
+        b.textContent = 'No se pudo conectar con el servidor. Revisa tu conexión y recarga la página.';
+        b.hidden = false;
+        $('btn-acceso').hidden = true;
+        $('btn-gate-login').disabled = true;
+        $('btn-gate-registro').disabled = true;
+        return;
+      }
+
+      Store.suscribirOcupados(lista => {
+        estado.ocupados = lista;
+        renderHorarios();
+      });
+      Store.suscribirDiasBloqueados(lista => {
+        estado.diasBloqueados = lista;
+        renderHorarios();
+        renderPanel();
+      });
+      Store.onSesion(alCambiarSesion);
+    }
+
+    iniciar();
+  </script>
+</body>
+</html>
