@@ -1309,8 +1309,9 @@
     };
 
     // Horario real del negocio por día de la semana (0=domingo … 6=sábado, como Date.getDay()).
-    // Cerrado los miércoles. Falta el descanso de almuerzo: en cuanto lo confirmen se agrega aquí.
-    const DURACION_TURNO_MIN = 60; // asumido en 1 hora; ajustable cuando lo confirmen
+    // Cerrado los miércoles. Almuerzo de 1 a 2 pm, igual para todos los barberos y días.
+    const DURACION_TURNO_MIN = 40; // turnos de 40 minutos
+    const ALMUERZO = { desde: "13:00", hasta: "14:00" };
     const HORARIO_SEMANA = {
       0: { abre: "08:00", cierra: "19:00" }, // domingo
       1: { abre: "08:00", cierra: "20:00" }, // lunes
@@ -1339,16 +1340,22 @@
       return fechaLocal(d);
     }
 
-    // Turnos del día según el horario semanal real del negocio. [] si ese día no se trabaja.
+    // Turnos del día según el horario semanal real del negocio, saltando la hora
+    // de almuerzo. [] si ese día no se trabaja.
     function horasDelDia(fecha) {
       const dia = new Date(fecha + 'T12:00:00').getDay();
       const cfg = HORARIO_SEMANA[dia];
       if (!cfg) return [];
       const [h1, m1] = cfg.abre.split(':').map(Number);
       const [h2, m2] = cfg.cierra.split(':').map(Number);
+      const [ha1, ma1] = ALMUERZO.desde.split(':').map(Number);
+      const [ha2, ma2] = ALMUERZO.hasta.split(':').map(Number);
+      const almuerzoDesde = ha1 * 60 + ma1;
+      const almuerzoHasta = ha2 * 60 + ma2;
       const fin = h2 * 60 + m2;
       const horas = [];
       for (let t = h1 * 60 + m1; t < fin; t += DURACION_TURNO_MIN) {
+        if (t >= almuerzoDesde && t < almuerzoHasta) continue; // hora de almuerzo
         horas.push(`${pad(Math.floor(t / 60))}:${pad(t % 60)}`);
       }
       return horas;
