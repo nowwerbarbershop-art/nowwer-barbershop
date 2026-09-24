@@ -148,6 +148,23 @@
       color: var(--danger);
     }
 
+    .banner.info {
+      background: rgba(52, 152, 219, 0.15);
+      border-color: var(--info);
+      color: var(--text-light);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .banner.info a {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
     /* Main Container */
     main {
       flex: 1;
@@ -542,14 +559,10 @@
 
     .confirmacion strong { color: var(--success); }
 
-    .confirmacion a {
-      align-self: flex-start;
-      color: #25D366;
-      font-size: 0.9rem;
-      text-decoration: none;
+    .confirmacion-nota {
+      color: var(--text-muted);
+      font-size: 0.85rem;
     }
-
-    .confirmacion a:hover { text-decoration: underline; }
 
     /* METRIC CARDS / DASHBOARD BARBERO */
     .metrics-grid {
@@ -888,6 +901,10 @@
     MODO DEMO: cuentas y citas se guardan solo en este navegador. Configura Firebase para compartirlas con el barbero.
   </div>
   <div class="banner error" id="banner-error" role="alert" hidden></div>
+  <div class="banner info" id="banner-telegram" hidden>
+    <span id="telegram-texto">🔔 Conecta Telegram para recibir tus avisos al instante</span>
+    <a href="#" id="btn-telegram-conectar" target="_blank" rel="noopener noreferrer">Conectar</a>
+  </div>
 
   <main>
     <!-- ================= SECCIÓN 0: ACCESO (LOGIN / REGISTRO) ================= -->
@@ -1231,9 +1248,10 @@
       "santiago@cambiar-correo.com": { clave: "santiago123", barberoId: "barbero_3", admin: false }
     };
 
-    const WHATSAPP_NEGOCIO = "573148962096"; // número real del negocio, con código de país
     const CODIGO_PAIS = "57";                // se agrega a teléfonos de 10 dígitos
     const MAX_DIAS_BLOQUEO = 60;             // máximo de días por cada bloqueo
+    // Bot de Telegram de Nowwer Barbershop (creado con @BotFather).
+    const TELEGRAM_BOT_USERNAME = "NowwerBarbershopBot";
 
     const BARBEROS = {
       barbero_1: { nombre: "Nowwer",   esDueno: true },
@@ -1585,6 +1603,12 @@
             if (u) { u.nombre = nombre; u.telefono = telefono; guardar(K.usuarios, usuarios); }
           }
           emitirSesion();
+        },
+
+        // En modo demo no hay Telegram real: siempre se muestra "sin conectar".
+        suscribirMiPerfil(cb) {
+          cb({ telegramChatId: null });
+          return () => {};
         }
       };
     })();
@@ -1802,6 +1826,18 @@
           const user = au.currentUser;
           if (!user) return;
           await fs.setDoc(fs.doc(db, 'usuarios', user.uid), { nombre, telefono }, { merge: true });
+        },
+
+        // Escucha en vivo el perfil propio: cuando el Apps Script conecte el chat de
+        // Telegram, esta pantalla se entera sola, sin que la persona tenga que recargar.
+        suscribirMiPerfil(cb) {
+          const { fs, db, au } = fb;
+          const user = au.currentUser;
+          if (!user) { cb({ telegramChatId: null }); return () => {}; }
+          return fs.onSnapshot(fs.doc(db, 'usuarios', user.uid),
+            snap => cb(snap.exists() ? { telegramChatId: snap.data().telegramChatId || null } : { telegramChatId: null }),
+            err => { console.error(err); cb({ telegramChatId: null }); }
+          );
         }
       };
     })();
@@ -1825,6 +1861,7 @@
       reservaAbierta: false // el panel "Reservar Cita" empieza oculto
     };
     let desuscribirCitas = null;
+    let desuscribirPerfil = null;
 
     function mostrarVista(nombre) {
       estado.vista = nombre;
@@ -1883,6 +1920,18 @@
       renderHorarios();
     }
 
+    // Muestra la barra "Conecta Telegram" a cualquiera con sesión que aún no lo haya
+    // conectado; se oculta sola apenas el Apps Script detecta la conexión.
+    function actualizarBarraTelegram(usuario, perfil) {
+      const barra = $('banner-telegram');
+      if (!usuario || (perfil && perfil.telegramChatId)) {
+        barra.hidden = true;
+        return;
+      }
+      $('btn-telegram-conectar').href = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${usuario.uid}`;
+      barra.hidden = false;
+    }
+
     function alCambiarSesion(usuario) {
       const uidAntes = estado.usuario ? estado.usuario.uid : null;
       const uidAhora = usuario ? usuario.uid : null;
@@ -1903,6 +1952,13 @@
         }, soloMio);
       } else {
         estado.citas = [];
+      }
+
+      if (desuscribirPerfil) { desuscribirPerfil(); desuscribirPerfil = null; }
+      if (usuario) {
+        desuscribirPerfil = Store.suscribirMiPerfil(perfil => actualizarBarraTelegram(usuario, perfil));
+      } else {
+        actualizarBarraTelegram(null, null);
       }
 
       if (cambio) {
@@ -2149,6 +2205,7 @@
       box.replaceChildren();
       box.appendChild(el('strong', null, '¡Tu cita ha sido agendada con éxito!'));
       box.appendChild(el('span', null, `${nombreBarbero(cita.barberoId)} · ${cita.fecha} · ${cita.hora}`));
+      box.appendChild(el('span', 'confirmacion-nota', 'Te llegará la confirmación por correo (y por Telegram, si lo conectaste).'));
 
       const cerrarConfirmacion = () => {
         box.hidden = true;
@@ -2161,17 +2218,6 @@
         renderHorarios();
       };
 
-      const texto = `Hola, soy ${cita.clienteNombre}. Reservé una cita con ${nombreBarbero(cita.barberoId)} el ${cita.fecha} a las ${cita.hora}.`;
-      const a = el('a');
-      a.href = `https://wa.me/${WHATSAPP_NEGOCIO}?text=${encodeURIComponent(texto)}`;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.append(icono('fa-brands fa-whatsapp'), ' Avisar por WhatsApp');
-      // Al abrir WhatsApp en otra pestaña, esta pantalla ya cumplió su función: se cierra sola.
-      a.addEventListener('click', () => setTimeout(cerrarConfirmacion, 400));
-      box.appendChild(a);
-
-      // Por si no quiere avisar por WhatsApp, para poder cerrar el aviso igual.
       const btnListo = el('button', 'link-btn', 'Listo, hacer otra reserva');
       btnListo.type = 'button';
       btnListo.style.marginBottom = '0';
