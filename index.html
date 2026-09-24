@@ -564,6 +564,31 @@
       font-size: 0.85rem;
     }
 
+    /* AVISO: EL CLIENTE YA TIENE UNA CITA PENDIENTE */
+    .mis-citas-aviso {
+      background: rgba(243, 156, 18, 0.12);
+      border: 1px solid var(--warning);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .mis-citas-aviso strong { color: var(--warning); }
+
+    .mis-citas-aviso .item {
+      font-size: 0.9rem;
+      color: var(--text-light);
+    }
+
+    .mis-citas-aviso .hint {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 0.3rem;
+    }
+
     /* METRIC CARDS / DASHBOARD BARBERO */
     .metrics-grid {
       display: grid;
@@ -970,14 +995,14 @@
         <h1>Cortes de Alta Gama</h1>
         <p>Tu estilo en manos de los mejores profesionales. Agenda tu cita en segundos.</p>
         <div class="social-links">
-          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="social-btn">
+          <a href="https://www.instagram.com/invites/contact/?utm_content=yp3rzk&stkn=1t22zih4bc10o" target="_blank" rel="noopener noreferrer" class="social-btn">
             <i class="fa-brands fa-instagram" aria-hidden="true"></i> Instagram
           </a>
           <a href="https://wa.me/573148962096" target="_blank" rel="noopener noreferrer" class="social-btn">
             <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> WhatsApp
           </a>
-          <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" class="social-btn">
-            <i class="fa-solid fa-location-dot" aria-hidden="true"></i> Ubicación
+          <a href="https://www.facebook.com/share/1EbeX6xPWe/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" class="social-btn">
+            <i class="fa-brands fa-facebook" aria-hidden="true"></i> Facebook
           </a>
         </div>
       </div>
@@ -1019,6 +1044,7 @@
 
           <!-- Con sesión y correo verificado: formulario de reserva -->
           <div class="form-container" id="reserva-box" hidden>
+            <div class="mis-citas-aviso" id="mis-citas-aviso" role="status" hidden></div>
             <div class="confirmacion" id="confirmacion" role="status" hidden></div>
 
             <form id="form-reserva" novalidate>
@@ -1634,6 +1660,16 @@
         suscribirMiPerfil(cb) {
           cb({ telegramChatId: null });
           return () => {};
+        },
+
+        // Las citas pendientes de la cuenta con sesión, para avisarle si ya
+        // tiene una agendada antes de que reserve otra por accidente.
+        suscribirMisCitas(cb) {
+          const id = leer(K.sesion, null);
+          if (!id) { cb([]); return () => {}; }
+          return suscribir(oyentes, () => cb(
+            citas.filter(c => c.uid === id && c.estado === 'pendiente').map(c => ({ ...c }))
+          ));
         }
       };
     })();
@@ -1864,6 +1900,19 @@
             snap => cb(snap.exists() ? { telegramChatId: snap.data().telegramChatId || null } : { telegramChatId: null }),
             err => { console.error(err); cb({ telegramChatId: null }); }
           );
+        },
+
+        // Las citas pendientes de la cuenta con sesión, para avisarle si ya
+        // tiene una agendada antes de que reserve otra por accidente.
+        suscribirMisCitas(cb) {
+          const { fs, db, au } = fb;
+          const user = au.currentUser;
+          if (!user) { cb([]); return () => {}; }
+          const q = fs.query(fs.collection(db, 'citas'), fs.where('uid', '==', user.uid), fs.where('estado', '==', 'pendiente'));
+          return fs.onSnapshot(q,
+            snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+            err => { console.error(err); cb([]); }
+          );
         }
       };
     })();
@@ -1888,6 +1937,7 @@
     };
     let desuscribirCitas = null;
     let desuscribirPerfil = null;
+    let desuscribirMisCitas = null;
 
     function mostrarVista(nombre) {
       estado.vista = nombre;
@@ -1958,6 +2008,29 @@
       barra.hidden = false;
     }
 
+    // Avisa (sin bloquear) si la cuenta ya tiene alguna cita pendiente por venir,
+    // para evitar reservas dobles por accidente (ej. se cortó el internet y no
+    // quedó claro si la primera sí se guardó).
+    function renderMisCitasAviso(lista) {
+      const cont = $('mis-citas-aviso');
+      const futuras = (lista || [])
+        .filter(c => !horaPasada(c.fecha, c.hora))
+        .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.hora.localeCompare(b.hora));
+
+      if (futuras.length === 0) {
+        cont.hidden = true;
+        cont.replaceChildren();
+        return;
+      }
+
+      cont.replaceChildren();
+      cont.appendChild(el('strong', null,
+        futuras.length === 1 ? 'Ya tienes una cita agendada' : `Ya tienes ${futuras.length} citas agendadas`));
+      futuras.forEach(c => cont.appendChild(el('div', 'item', `${nombreBarbero(c.barberoId)} · ${c.fecha} · ${c.hora}`)));
+      cont.appendChild(el('p', 'hint', 'Si de verdad quieres otra, completa el formulario de abajo. Si no, ya tienes la tuya.'));
+      cont.hidden = false;
+    }
+
     function alCambiarSesion(usuario) {
       const uidAntes = estado.usuario ? estado.usuario.uid : null;
       const uidAhora = usuario ? usuario.uid : null;
@@ -1985,6 +2058,13 @@
         desuscribirPerfil = Store.suscribirMiPerfil(perfil => actualizarBarraTelegram(usuario, perfil));
       } else {
         actualizarBarraTelegram(null, null);
+      }
+
+      if (desuscribirMisCitas) { desuscribirMisCitas(); desuscribirMisCitas = null; }
+      if (usuario) {
+        desuscribirMisCitas = Store.suscribirMisCitas(lista => renderMisCitasAviso(lista));
+      } else {
+        renderMisCitasAviso([]);
       }
 
       if (cambio) {
