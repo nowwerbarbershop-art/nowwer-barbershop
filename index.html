@@ -1253,6 +1253,29 @@
     // Bot de Telegram de Nowwer Barbershop (creado con @BotFather).
     const TELEGRAM_BOT_USERNAME = "NowwerBarbershopBot";
 
+    // Para que la confirmación salga casi al instante (en vez de esperar hasta
+    // 5 minutos). URL de la aplicación web de Apps Script ya implementada.
+    // El secreto debe ser IDÉNTICO al que quedó en recordatorios.gs
+    // (WEBHOOK_SECRETO_RESPALDO) — si algún día cambias uno, cambia el otro igual.
+    const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz7NDJAiRhobtDgzz5w76ldBlgB4Pe4G_-t0COBpe9HqSLGha_aFkiILxsAtwchqPUKdg/exec";
+    const WEBHOOK_SECRETO = "EkZBoTiwczmoYcNjDh2mrHrXXoevBn7c";
+
+    // Avisa al motor de Apps Script apenas se crea una cita, para una
+    // confirmación casi instantánea. Es "mejor esfuerzo": si falla (sin
+    // internet, se cerró la pestaña, la URL no está puesta todavía, etc.), no
+    // pasa nada — el barrido de cada 5 minutos la confirma de todas formas.
+    function avisarConfirmacionInstantanea(citaId) {
+      if (!USAR_FIREBASE || !citaId || APPS_SCRIPT_WEB_APP_URL.startsWith("TU_")) return;
+      try {
+        fetch(APPS_SCRIPT_WEB_APP_URL, {
+          method: "POST",
+          mode: "no-cors", // no necesitamos leer la respuesta, solo que se dispare
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ citaId, secreto: WEBHOOK_SECRETO })
+        }).catch(() => { /* silencioso a propósito: el barrido de 5 min es el respaldo */ });
+      } catch (e) { /* igual, silencioso */ }
+    }
+
     const BARBEROS = {
       barbero_1: { nombre: "Nowwer",   esDueno: true },
       barbero_2: { nombre: "Osnayder" },
@@ -1499,9 +1522,11 @@
           if (!u.admin && !u.verificado) throw new Error('NO_VERIFICADO');
           if (diaBloq(c.barberoId, c.fecha)) throw new Error('DIA_BLOQUEADO');
           if (ocupa(c.barberoId, c.fecha, c.hora)) throw new Error('OCUPADO');
-          citas.push({ ...c, id: crearId(), estado: 'pendiente', creadaEn: Date.now() });
+          const id = crearId();
+          citas.push({ ...c, id, estado: 'pendiente', creadaEn: Date.now() });
           guardar(K.citas, citas);
           emitir();
+          return id;
         },
 
         async bloquear(barberoId, fecha, hora) {
@@ -1726,6 +1751,7 @@
             tx.set(slotRef, { barberoId: c.barberoId, fecha: c.fecha, hora: c.hora, tipo: 'cita', citaId: citaRef.id });
             tx.set(citaRef, { ...c, estado: 'pendiente', creadaEn: fs.serverTimestamp() });
           });
+          return citaRef.id;
         },
 
         async bloquear(barberoId, fecha, hora) {
@@ -2265,7 +2291,8 @@
       btn.disabled = true;
       try {
         const cita = { clienteNombre: nombre, clienteTelefono: telefono, barberoId, fecha, hora, uid: estado.usuario.uid };
-        await Store.reservar(cita);
+        const citaId = await Store.reservar(cita);
+        avisarConfirmacionInstantanea(citaId);
         estado.horaSel = '';
         renderHorarios();
         mostrarConfirmacion(cita);
