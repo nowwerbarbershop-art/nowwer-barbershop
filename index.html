@@ -185,26 +185,27 @@
       font-size: 1.4rem;
     }
 
-    /* BANNER & GALERÍA DE BARBERÍA */
-    .hero-banner {
-      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url('img/banner-fondo.jpg') center/cover;
+    /* TARJETA DE INICIO: imagen + texto */
+    .intro-card {
       border-radius: 12px;
-      padding: 2.5rem 1.5rem;
-      text-align: center;
+      overflow: hidden;
       margin-bottom: 2rem;
       border: 1px solid #333;
+      background: var(--card-bg);
     }
 
-    .hero-banner h1 {
-      font-size: 2rem;
-      color: var(--primary);
-      margin-bottom: 0.5rem;
+    .intro-img {
+      width: 100%;
+      display: block;
+      max-height: 320px;
+      object-fit: cover;
     }
 
-    .hero-banner p {
+    .intro-texto {
+      padding: 1.2rem 1.5rem;
       color: #ddd;
       font-size: 0.95rem;
-      margin-bottom: 1.2rem;
+      line-height: 1.55;
     }
 
     .social-links {
@@ -212,24 +213,26 @@
       justify-content: center;
       gap: 15px;
       flex-wrap: wrap;
+      margin: 2rem 0;
     }
 
     .social-btn {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(255,255,255,0.1);
+      background: var(--input-bg);
+      border: 1px solid #333;
       color: #fff;
       padding: 8px 16px;
       border-radius: 20px;
       text-decoration: none;
       font-size: 0.85rem;
-      backdrop-filter: blur(5px);
-      transition: background 0.3s;
+      transition: background 0.3s, border-color 0.3s;
     }
 
     .social-btn:hover {
       background: var(--primary);
+      border-color: var(--primary);
       color: #000;
     }
 
@@ -871,7 +874,7 @@
     @media (max-width: 600px) {
       main { padding: 1rem; }
       header { flex-direction: column; gap: 0.8rem; padding: 1rem; }
-      .hero-banner { padding: 1.5rem 1rem; }
+      .intro-texto { padding: 1rem 1.2rem; }
       .card { flex-direction: column; align-items: flex-start; gap: 10px; }
       .card-actions { width: 100%; justify-content: flex-end; }
       .dashboard-header { flex-direction: column; align-items: flex-start; gap: 10px; }
@@ -991,20 +994,9 @@
     <section id="view-cliente" class="view-section active">
 
       <!-- Banner e Info Social -->
-      <div class="hero-banner">
-        <h1>Cortes de Alta Gama</h1>
-        <p>Tu estilo en manos de los mejores profesionales. Agenda tu cita en segundos.</p>
-        <div class="social-links">
-          <a href="https://www.instagram.com/invites/contact/?utm_content=yp3rzk&stkn=1t22zih4bc10o" target="_blank" rel="noopener noreferrer" class="social-btn">
-            <i class="fa-brands fa-instagram" aria-hidden="true"></i> Instagram
-          </a>
-          <a href="https://wa.me/573148962096" target="_blank" rel="noopener noreferrer" class="social-btn">
-            <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> WhatsApp
-          </a>
-          <a href="https://www.facebook.com/share/1EbeX6xPWe/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" class="social-btn">
-            <i class="fa-brands fa-facebook" aria-hidden="true"></i> Facebook
-          </a>
-        </div>
+      <div class="intro-card">
+        <img class="intro-img" src="img/banner-fondo.jpg" alt="Nowwer Barbershop">
+        <p class="intro-texto">✨ En Nowwer Barber Shop, cada corte es una oportunidad para renovar tu estilo y proyectar tu mejor versión. Combinamos precisión, dedicación y las últimas tendencias para ofrecerte mucho más que un servicio: una experiencia pensada para ti. Tu estilo habla por ti, nosotros nos encargamos de hacerlo destacar.</p>
       </div>
 
       <!-- RESERVAR CITA: desplegable, oculto por defecto -->
@@ -1101,6 +1093,18 @@
           <img loading="lazy" src="https://images.unsplash.com/photo-1517832606589-7150048cb151?auto=format&fit=crop&w=600&q=80" alt="Diseño de Estilo">
         </div>
       </div>
+
+      <div class="social-links">
+        <a href="https://www.instagram.com/invites/contact/?utm_content=yp3rzk&stkn=1t22zih4bc10o" target="_blank" rel="noopener noreferrer" class="social-btn">
+          <i class="fa-brands fa-instagram" aria-hidden="true"></i> Instagram
+        </a>
+        <a href="https://wa.me/573148962096" target="_blank" rel="noopener noreferrer" class="social-btn">
+          <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> WhatsApp
+        </a>
+        <a href="https://www.facebook.com/share/1EbeX6xPWe/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" class="social-btn">
+          <i class="fa-brands fa-facebook" aria-hidden="true"></i> Facebook
+        </a>
+      </div>
     </section>
 
 
@@ -1165,6 +1169,57 @@
           </button>
         </div>
         <div class="chips" id="lista-dias-bloqueados"></div>
+      </div>
+
+      <!-- RESUMEN DE CITAS -->
+      <div class="dias-panel">
+        <div class="section-title" style="margin-bottom: 0.8rem;">
+          <i class="fa-solid fa-chart-column" aria-hidden="true"></i> Resumen de Citas
+        </div>
+        <div class="subtabs" role="tablist" style="margin-bottom: 1rem;">
+          <button type="button" class="subtab-btn resumen-tab active" data-periodo="dia">Día</button>
+          <button type="button" class="subtab-btn resumen-tab" data-periodo="semana">Semana</button>
+          <button type="button" class="subtab-btn resumen-tab" data-periodo="mes">Mes</button>
+        </div>
+        <p class="hint" id="resumen-rango-texto"></p>
+        <div class="metrics-grid" style="margin-top: 0.8rem; margin-bottom: 0;">
+          <div class="metric-card">
+            <div class="metric-icon" style="background: rgba(212, 175, 55, 0.2); color: var(--primary);">
+              <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+            </div>
+            <div class="metric-info">
+              <h4 id="resumen-total">0</h4>
+              <p>Total del período</p>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background: rgba(46, 204, 113, 0.2); color: var(--success);">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            </div>
+            <div class="metric-info">
+              <h4 id="resumen-completadas">0</h4>
+              <p>Completadas</p>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background: rgba(243, 156, 18, 0.2); color: var(--warning);">
+              <i class="fa-solid fa-clock" aria-hidden="true"></i>
+            </div>
+            <div class="metric-info">
+              <h4 id="resumen-pendientes">0</h4>
+              <p>Pendientes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LISTADO DE CLIENTES -->
+      <div class="dias-panel">
+        <div class="section-title" style="margin-bottom: 0.8rem;">
+          <i class="fa-solid fa-address-book" aria-hidden="true"></i> Listado de Clientes
+        </div>
+        <div class="cards-list" id="lista-clientes"></div>
+        <p class="hint" id="clientes-total" style="margin-top: 0.8rem; margin-bottom: 0;"></p>
       </div>
 
       <!-- Filtros de lista -->
@@ -1338,6 +1393,20 @@
       const d = new Date(fecha + 'T12:00:00');
       d.setDate(d.getDate() + n);
       return fechaLocal(d);
+    }
+
+    // Lunes y domingo de la semana que contiene esa fecha.
+    function inicioSemana(fecha) {
+      const dow = new Date(fecha + 'T12:00:00').getDay(); // 0=domingo … 6=sábado
+      return sumarDias(fecha, dow === 0 ? -6 : 1 - dow);
+    }
+    const finSemana = fecha => sumarDias(inicioSemana(fecha), 6);
+
+    // Primer y último día del mes que contiene esa fecha.
+    const inicioMes = fecha => fecha.slice(0, 7) + '-01';
+    function finMes(fecha) {
+      const [y, m] = fecha.split('-').map(Number);
+      return `${fecha.slice(0, 7)}-${pad(new Date(y, m, 0).getDate())}`;
     }
 
     // Turnos del día según el horario semanal real del negocio, saltando la hora
@@ -1939,6 +2008,7 @@
       diasBloqueados: [],
       horaSel: '',
       modo: 'dia',          // 'dia' | 'historico'
+      resumenPeriodo: 'dia', // 'dia' | 'semana' | 'mes'
       vista: 'cliente',     // 'cliente' | 'login' | 'barbero'
       reservaAbierta: false // el panel "Reservar Cita" empieza oculto
     };
@@ -2435,6 +2505,59 @@
       return estado.admin ? $('filtro-barbero-panel').value : estado.miBarberoId;
     }
 
+    // Cuenta las citas de "todas" (ya filtradas por barbero) dentro del período
+    // elegido (día/semana/mes), usando el selector de fecha del panel como referencia.
+    function renderResumen(todas) {
+      const fecha = $('filtro-fecha-barbero').value || fechaLocal();
+      let desde = fecha, hasta = fecha, texto = `Día: ${fecha}`;
+      if (estado.resumenPeriodo === 'semana') {
+        desde = inicioSemana(fecha); hasta = finSemana(fecha);
+        texto = `Semana: ${desde} al ${hasta}`;
+      } else if (estado.resumenPeriodo === 'mes') {
+        desde = inicioMes(fecha); hasta = finMes(fecha);
+        texto = `Mes: ${desde} al ${hasta}`;
+      }
+
+      const enRango = todas.filter(c => c.estado !== 'bloqueada' && c.fecha >= desde && c.fecha <= hasta);
+      const reales = enRango.filter(c => c.estado !== 'cancelada');
+      $('resumen-total').textContent = reales.length;
+      $('resumen-completadas').textContent = enRango.filter(c => c.estado === 'completada').length;
+      $('resumen-pendientes').textContent = enRango.filter(c => c.estado === 'pendiente').length;
+      $('resumen-rango-texto').textContent = texto;
+    }
+
+    // Clientes distintos entre las citas visibles (ya filtradas por rol): el dueño
+    // ve todos los del negocio, cada empleado solo los suyos. No cuenta los bloqueos.
+    function renderClientes(todas) {
+      const porClave = new Map();
+      todas
+        .filter(c => c.estado !== 'bloqueada' && (c.uid || c.clienteTelefono || c.clienteNombre))
+        .sort((a, b) => (a.creadaEn || 0) - (b.creadaEn || 0))
+        .forEach(c => porClave.set(c.uid || c.clienteTelefono || c.clienteNombre, { nombre: c.clienteNombre, telefono: c.clienteTelefono }));
+
+      const clientes = [...porClave.values()].sort((a, b) => a.nombre.localeCompare(b.nombre));
+      const cont = $('lista-clientes');
+      cont.replaceChildren();
+
+      if (clientes.length === 0) {
+        cont.appendChild(el('p', 'empty-msg', 'Todavía no hay clientes registrados.'));
+      } else {
+        clientes.forEach(c => {
+          const fila = el('div', 'card');
+          const info = el('div', 'card-info');
+          info.appendChild(el('h3', null, c.nombre));
+          if (c.telefono) {
+            const p = el('p');
+            p.append(icono('fa-solid fa-phone'), ` +${c.telefono}`);
+            info.appendChild(p);
+          }
+          fila.appendChild(info);
+          cont.appendChild(fila);
+        });
+      }
+      $('clientes-total').textContent = `Total de clientes: ${clientes.length}`;
+    }
+
     function renderPanel() {
       if (!estado.esBarbero) return;
 
@@ -2456,6 +2579,8 @@
       $('cnt-completadas').textContent = deHoy.filter(c => c.estado === 'completada').length;
 
       renderDiasBloqueados();
+      renderResumen(todas);
+      renderClientes(todas);
 
       let lista;
       let avisos = [];
@@ -2781,11 +2906,18 @@
       document.addEventListener('keydown', ev => { if (ev.key === 'Escape') cerrarFoto(); });
 
       // Panel barbero
-      document.querySelectorAll('#view-barbero .subtab-btn').forEach(b => {
+      document.querySelectorAll('#view-barbero .subtab-btn:not(.resumen-tab)').forEach(b => {
         b.addEventListener('click', () => {
           estado.modo = b.dataset.modo;
-          document.querySelectorAll('#view-barbero .subtab-btn').forEach(x => x.classList.toggle('active', x === b));
+          document.querySelectorAll('#view-barbero .subtab-btn:not(.resumen-tab)').forEach(x => x.classList.toggle('active', x === b));
           $('filtro-fecha-barbero').hidden = estado.modo === 'historico';
+          renderPanel();
+        });
+      });
+      document.querySelectorAll('.resumen-tab').forEach(b => {
+        b.addEventListener('click', () => {
+          estado.resumenPeriodo = b.dataset.periodo;
+          document.querySelectorAll('.resumen-tab').forEach(x => x.classList.toggle('active', x === b));
           renderPanel();
         });
       });
