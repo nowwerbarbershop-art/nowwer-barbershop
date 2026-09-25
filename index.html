@@ -177,6 +177,14 @@
     .view-section { display: none; }
     .view-section.active { display: block; }
 
+    /* Fondo de foto para todo el panel del cliente: se ve detrás de la galería,
+       de "Reservar Cita" y de los botones de redes; las tarjetas siguen opacas encima. */
+    #view-cliente {
+      background: linear-gradient(rgba(13,13,13,0.87), rgba(13,13,13,0.94)), url('img/banner-fondo.jpg') center/cover;
+      border-radius: 14px;
+      padding: 1.2rem;
+    }
+
     h2 {
       margin-bottom: 1.2rem;
       color: var(--primary);
@@ -185,23 +193,22 @@
       font-size: 1.4rem;
     }
 
-    /* TARJETA DE INICIO: imagen completa + esa misma foto de fondo tras el texto */
+    /* TARJETA DE INICIO: solo la imagen, completa */
     .intro-card {
       border-radius: 12px;
       overflow: hidden;
-      margin-bottom: 2rem;
-      border: 1px solid #333;
+      margin-bottom: 1.5rem;
     }
 
     .intro-img {
       width: 100%;
       display: block;
       height: auto; /* la foto se ve completa, nunca recortada */
+      border-radius: 12px;
     }
 
     .intro-texto-wrap {
-      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.88)), url('img/banner-fondo.jpg') center/cover;
-      padding: 1.2rem 1.5rem;
+      padding: 0 0.2rem 1.5rem;
     }
 
     .intro-texto {
@@ -875,8 +882,9 @@
 
     @media (max-width: 600px) {
       main { padding: 1rem; }
+      #view-cliente { padding: 0.9rem; }
       header { flex-direction: column; gap: 0.8rem; padding: 1rem; }
-      .intro-texto-wrap { padding: 1rem 1.2rem; }
+      .intro-texto-wrap { padding: 0 0 1.2rem; }
       .card { flex-direction: column; align-items: flex-start; gap: 10px; }
       .card-actions { width: 100%; justify-content: flex-end; }
       .dashboard-header { flex-direction: column; align-items: flex-start; gap: 10px; }
