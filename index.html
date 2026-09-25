@@ -72,7 +72,7 @@
       background-color: #0d0d0d;
       padding: 1rem 2rem;
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
       border-bottom: 2px solid var(--primary);
       position: sticky;
@@ -185,25 +185,27 @@
       font-size: 1.4rem;
     }
 
-    /* TARJETA DE INICIO: imagen + texto */
+    /* TARJETA DE INICIO: imagen completa + esa misma foto de fondo tras el texto */
     .intro-card {
       border-radius: 12px;
       overflow: hidden;
       margin-bottom: 2rem;
       border: 1px solid #333;
-      background: var(--card-bg);
     }
 
     .intro-img {
       width: 100%;
       display: block;
-      max-height: 320px;
-      object-fit: cover;
+      height: auto; /* la foto se ve completa, nunca recortada */
+    }
+
+    .intro-texto-wrap {
+      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.88)), url('img/banner-fondo.jpg') center/cover;
+      padding: 1.2rem 1.5rem;
     }
 
     .intro-texto {
-      padding: 1.2rem 1.5rem;
-      color: #ddd;
+      color: #eee;
       font-size: 0.95rem;
       line-height: 1.55;
     }
@@ -874,7 +876,7 @@
     @media (max-width: 600px) {
       main { padding: 1rem; }
       header { flex-direction: column; gap: 0.8rem; padding: 1rem; }
-      .intro-texto { padding: 1rem 1.2rem; }
+      .intro-texto-wrap { padding: 1rem 1.2rem; }
       .card { flex-direction: column; align-items: flex-start; gap: 10px; }
       .card-actions { width: 100%; justify-content: flex-end; }
       .dashboard-header { flex-direction: column; align-items: flex-start; gap: 10px; }
@@ -914,9 +916,6 @@
 
   <!-- HEADER NAV -->
   <header>
-    <div class="brand">
-      <i class="fa-solid fa-scissors" aria-hidden="true"></i> Nowwer Barbershop
-    </div>
     <nav class="nav-tabs" aria-label="Navegación principal">
       <span class="nav-saludo" id="nav-saludo" hidden></span>
       <button type="button" class="tab-btn" id="btn-tab-cliente" hidden>Vista Cliente</button>
@@ -996,7 +995,9 @@
       <!-- Banner e Info Social -->
       <div class="intro-card">
         <img class="intro-img" src="img/banner-fondo.jpg" alt="Nowwer Barbershop">
-        <p class="intro-texto">✨ En Nowwer Barber Shop, cada corte es una oportunidad para renovar tu estilo y proyectar tu mejor versión. Combinamos precisión, dedicación y las últimas tendencias para ofrecerte mucho más que un servicio: una experiencia pensada para ti. Tu estilo habla por ti, nosotros nos encargamos de hacerlo destacar.</p>
+        <div class="intro-texto-wrap">
+          <p class="intro-texto">✨ En Nowwer Barber Shop, cada corte es una oportunidad para renovar tu estilo y proyectar tu mejor versión. Combinamos precisión, dedicación y las últimas tendencias para ofrecerte mucho más que un servicio: una experiencia pensada para ti. Tu estilo habla por ti, nosotros nos encargamos de hacerlo destacar.</p>
+        </div>
       </div>
 
       <!-- RESERVAR CITA: desplegable, oculto por defecto -->
