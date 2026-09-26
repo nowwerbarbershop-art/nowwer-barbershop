@@ -1216,21 +1216,29 @@
         </div>
       </div>
 
-      <!-- DÍAS DE DESCANSO -->
-      <div class="dias-panel">
-        <div class="dias-header">
-          <div class="section-title">
-            <i class="fa-solid fa-umbrella-beach" aria-hidden="true"></i> Días de descanso
-          </div>
-          <button type="button" class="btn btn-secondary" id="btn-bloquear-dia">
-            <i class="fa-solid fa-calendar-xmark" aria-hidden="true"></i> Bloquear día(s)
+      <!-- Filtros de lista -->
+      <div class="panel-toolbar">
+        <div class="subtabs" role="tablist">
+          <button type="button" class="subtab-btn active" data-modo="dia">Por día</button>
+          <button type="button" class="subtab-btn" data-modo="historico">Histórico completo</button>
+        </div>
+
+        <div class="toolbar-controls">
+          <select id="filtro-barbero-panel" aria-label="Filtrar por barbero">
+            <option value="">Todos los barberos</option>
+          </select>
+          <input type="date" id="filtro-fecha-barbero" aria-label="Filtrar por fecha">
+          <button type="button" class="btn btn-danger" id="btn-bloquear">
+            <i class="fa-solid fa-ban" aria-hidden="true"></i> Bloquear Hora
           </button>
         </div>
-        <div class="chips" id="lista-dias-bloqueados"></div>
       </div>
 
+      <!-- LISTA DE CITAS -->
+      <div class="cards-list" id="lista-citas-barbero"></div>
+
       <!-- RESUMEN DE CITAS -->
-      <div class="dias-panel">
+      <div class="dias-panel" style="margin-top: 1.5rem;">
         <div class="section-title" style="margin-bottom: 0.8rem;">
           <i class="fa-solid fa-chart-column" aria-hidden="true"></i> Resumen de Citas
         </div>
@@ -1271,35 +1279,30 @@
         </div>
       </div>
 
-      <!-- LISTADO DE CLIENTES -->
+      <!-- DÍAS DE DESCANSO -->
       <div class="dias-panel">
-        <div class="section-title" style="margin-bottom: 0.8rem;">
-          <i class="fa-solid fa-address-book" aria-hidden="true"></i> Listado de Clientes
-        </div>
-        <div class="cards-list" id="lista-clientes"></div>
-        <p class="hint" id="clientes-total" style="margin-top: 0.8rem; margin-bottom: 0;"></p>
-      </div>
-
-      <!-- Filtros de lista -->
-      <div class="panel-toolbar">
-        <div class="subtabs" role="tablist">
-          <button type="button" class="subtab-btn active" data-modo="dia">Por día</button>
-          <button type="button" class="subtab-btn" data-modo="historico">Histórico completo</button>
-        </div>
-
-        <div class="toolbar-controls">
-          <select id="filtro-barbero-panel" aria-label="Filtrar por barbero">
-            <option value="">Todos los barberos</option>
-          </select>
-          <input type="date" id="filtro-fecha-barbero" aria-label="Filtrar por fecha">
-          <button type="button" class="btn btn-danger" id="btn-bloquear">
-            <i class="fa-solid fa-ban" aria-hidden="true"></i> Bloquear Hora
+        <div class="dias-header">
+          <div class="section-title">
+            <i class="fa-solid fa-umbrella-beach" aria-hidden="true"></i> Días de descanso
+          </div>
+          <button type="button" class="btn btn-secondary" id="btn-bloquear-dia">
+            <i class="fa-solid fa-calendar-xmark" aria-hidden="true"></i> Bloquear día(s)
           </button>
         </div>
+        <div class="chips" id="lista-dias-bloqueados"></div>
       </div>
 
-      <!-- LISTA DE CITAS -->
-      <div class="cards-list" id="lista-citas-barbero"></div>
+      <!-- LISTADO DE CLIENTES: desplegable, oculto por defecto (para no llenar de bulto el panel) -->
+      <div class="dias-panel">
+        <button type="button" class="reserva-toggle" id="btn-clientes-toggle" aria-expanded="false" aria-controls="clientes-contenido">
+          <span><i class="fa-solid fa-address-book" aria-hidden="true"></i> Listado de Clientes</span>
+          <i class="fa-solid fa-chevron-down reserva-toggle-icon" aria-hidden="true"></i>
+        </button>
+        <div id="clientes-contenido" hidden>
+          <div class="cards-list" id="lista-clientes" style="margin-top: 1rem;"></div>
+          <p class="hint" id="clientes-total" style="margin-top: 0.8rem; margin-bottom: 0;"></p>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -2129,6 +2132,13 @@
     function alternarPanelReserva() {
       estado.reservaAbierta = !estado.reservaAbierta;
       actualizarPanelReserva();
+    }
+
+    // Desplegable "Listado de Clientes" (empieza cerrado, para no llenar de bulto el panel)
+    function alternarClientes() {
+      const abierto = $('clientes-contenido').hidden;
+      $('clientes-contenido').hidden = !abierto;
+      $('btn-clientes-toggle').setAttribute('aria-expanded', String(abierto));
     }
 
     function limpiarFormularioReserva() {
@@ -3008,6 +3018,7 @@
 
       // Panel "Reservar Cita" (desplegable)
       $('btn-reserva-toggle').addEventListener('click', alternarPanelReserva);
+      $('btn-clientes-toggle').addEventListener('click', alternarClientes);
 
       // Acceso
       document.querySelectorAll('.auth-tab').forEach(b => b.addEventListener('click', () => abrirAcceso(b.dataset.auth)));
