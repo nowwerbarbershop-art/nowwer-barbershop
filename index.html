@@ -1084,24 +1084,11 @@
         </div>
       </div>
 
-      <!-- GALERÍA DE TRABAJOS -->
+      <!-- GALERÍA DE TRABAJOS: se llena sola desde FOTOS_GALERIA (ver el script, abajo del todo) -->
       <div class="section-title">
         <i class="fa-solid fa-camera" aria-hidden="true"></i> Estilos y Trabajos Recientes
       </div>
-      <div class="gallery-grid">
-        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Corte Fade Tradicional">
-          <img loading="lazy" src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=600&q=80" alt="Corte Fade Tradicional">
-        </div>
-        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Perfilado de Barba">
-          <img loading="lazy" src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=600&q=80" alt="Perfilado de Barba">
-        </div>
-        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Corte Moderno">
-          <img loading="lazy" src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=600&q=80" alt="Corte Moderno">
-        </div>
-        <div class="gallery-item" role="button" tabindex="0" aria-label="Ampliar foto: Diseño de Estilo">
-          <img loading="lazy" src="https://images.unsplash.com/photo-1517832606589-7150048cb151?auto=format&fit=crop&w=600&q=80" alt="Diseño de Estilo">
-        </div>
-      </div>
+      <div class="gallery-grid" id="gallery-grid"></div>
 
       <div class="social-links">
         <a href="https://www.instagram.com/invites/contact/?utm_content=yp3rzk&stkn=1t22zih4bc10o" target="_blank" rel="noopener noreferrer" class="social-btn">
@@ -1342,6 +1329,13 @@
     const MAX_DIAS_BLOQUEO = 60;             // máximo de días por cada bloqueo
     // Bot de Telegram de Nowwer Barbershop (creado con @BotFather).
     const TELEGRAM_BOT_USERNAME = "NowwerBarbershopBot";
+
+    // GALERÍA "Estilos y Trabajos Recientes": para agregar o cambiar una foto,
+    // solo sube el archivo a la carpeta img/trabajos/ con el nombre exacto
+    // trabajo-01.jpg, trabajo-02.jpg, etc. (en ese orden, sin saltarte números).
+    // No hace falta tocar nada de este código: la página revisa sola cuáles
+    // archivos existen y muestra esos. Hay cupo para 40 sin tener que ampliarlo.
+    const TOTAL_CUPOS_GALERIA = 40;
 
     // Para que la confirmación salga casi al instante (en vez de esperar hasta
     // 5 minutos). URL de la aplicación web de Apps Script ya implementada.
@@ -2495,9 +2489,31 @@
     }
 
     /* Galería */
+    // Prueba, en silencio, cuáles archivos trabajo-01.jpg...trabajo-40.jpg existen
+    // de verdad, y solo muestra esos. Los que todavía no se han subido no dejan
+    // ningún hueco ni ícono de foto rota: se ocultan solos.
+    function renderGaleria() {
+      const cont = $('gallery-grid');
+      for (let n = 1; n <= TOTAL_CUPOS_GALERIA; n++) {
+        const num = String(n).padStart(2, '0');
+        const item = el('div', 'gallery-item');
+        item.setAttribute('role', 'button');
+        item.tabIndex = 0;
+        item.setAttribute('aria-label', `Ampliar foto de trabajo ${n}`);
+
+        const img = document.createElement('img');
+        img.loading = 'lazy';
+        img.src = `img/trabajos/trabajo-${num}.jpg`;
+        img.alt = `Trabajo realizado ${n}`;
+        img.onerror = () => item.remove(); // ese cupo todavía no tiene foto subida
+        item.appendChild(img);
+        cont.appendChild(item);
+      }
+    }
+
     function ampliarFoto(item) {
       const img = item.querySelector('img');
-      $('img-ampliada').src = img.src.replace('w=600', 'w=1200');
+      $('img-ampliada').src = img.src;
       $('img-ampliada').alt = img.alt;
       $('modal-lightbox').style.display = 'flex';
       $('modal-lightbox').querySelector('.modal-close-btn').focus();
@@ -2904,12 +2920,15 @@
       $('select-fecha').addEventListener('change', cambioSeleccion);
       $('form-reserva').addEventListener('submit', enviarReserva);
 
-      // Galería y visor
-      document.querySelectorAll('.gallery-item').forEach(item => {
-        item.addEventListener('click', () => ampliarFoto(item));
-        item.addEventListener('keydown', ev => {
-          if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ampliarFoto(item); }
-        });
+      // Galería y visor (delegado: las fotos se crean después, en renderGaleria)
+      $('gallery-grid').addEventListener('click', ev => {
+        const item = ev.target.closest('.gallery-item');
+        if (item) ampliarFoto(item);
+      });
+      $('gallery-grid').addEventListener('keydown', ev => {
+        if (ev.key !== 'Enter' && ev.key !== ' ') return;
+        const item = ev.target.closest('.gallery-item');
+        if (item) { ev.preventDefault(); ampliarFoto(item); }
       });
       $('modal-lightbox').addEventListener('click', cerrarFoto);
       document.addEventListener('keydown', ev => { if (ev.key === 'Escape') cerrarFoto(); });
@@ -2946,6 +2965,7 @@
 
     async function iniciar() {
       poblarBarberos();
+      renderGaleria();
 
       const hoy = fechaLocal();
       $('select-fecha').min = hoy;
