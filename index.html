@@ -961,19 +961,13 @@
        "Correo electrónico/contraseña".
     2. Pega tus datos en FIREBASE_CONFIG (más abajo, en el script).
     3. Publica las reglas del archivo firestore.rules.
-    4. Los clientes deben VERIFICAR SU CORREO para poder reservar:
-       Firebase les envía el enlace al crear la cuenta. Para que el
-       correo llegue en español: Authentication > Plantillas >
-       "Verificación de dirección de correo" > Idioma.
-    5. Crea tu cuenta de barbero desde "Iniciar sesión > Crear cuenta"
+    4. Crea tu cuenta de barbero desde "Iniciar sesión > Crear cuenta"
        y dale permisos de barbero (una sola vez, con el Admin SDK):
          admin.auth().setCustomUserClaims(UID, { admin: true })
        Luego cierra sesión y vuelve a entrar para que se aplique.
-       (El barbero no necesita verificar su correo.)
     Mientras FIREBASE_CONFIG tenga "TU_API_KEY_AQUI", la app corre en
     MODO DEMO: cuentas y citas se guardan solo en este navegador
-    (sin seguridad real) y la verificación de correo se simula con un
-    botón.
+    (sin seguridad real).
     ============================================================
   -->
 
@@ -1008,7 +1002,7 @@
         <p class="demo-hint" id="demo-hint" hidden>
           Modo demo. Dueño: <b>nowwerbarbershop@gmail.com</b> / <b>admin123</b>.
           Osnayder y Santiago: sus correos reales, contraseñas <b>osnayder123</b> / <b>santiago123</b> (temporales, solo para probar).
-          Los clientes crean su cuenta en la pestaña "Crear cuenta"; la verificación de correo se simula con un botón.
+          Los clientes crean su cuenta en la pestaña "Crear cuenta" y quedan listos para reservar de una vez.
         </p>
 
         <!-- Iniciar sesión -->
@@ -1082,23 +1076,7 @@
             </div>
           </div>
 
-          <!-- Con sesión pero sin correo verificado -->
-          <div class="form-container" id="reserva-verificar" hidden>
-            <h2><i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i> Verifica tu correo para reservar</h2>
-            <p class="gate-msg">
-              Te enviamos un enlace de confirmación a <strong id="verificar-correo"></strong>.
-              Ábrelo y luego vuelve aquí. Si no lo ves, revisa la carpeta de spam.
-            </p>
-            <div class="gate-actions">
-              <button type="button" class="btn" id="btn-verificado">Ya verifiqué mi correo</button>
-              <button type="button" class="btn btn-secondary" id="btn-reenviar">Reenviar correo</button>
-            </div>
-            <div class="gate-actions" id="verificar-demo" style="margin-top: 0.8rem;" hidden>
-              <button type="button" class="btn btn-secondary btn-demo" id="btn-simular-verif">Simular verificación (solo demo)</button>
-            </div>
-          </div>
-
-          <!-- Con sesión y correo verificado: formulario de reserva -->
+          <!-- Con sesión: formulario de reserva -->
           <div class="form-container" id="reserva-box" hidden>
             <div class="mis-citas-aviso" id="mis-citas-aviso" role="status" hidden></div>
             <div class="confirmacion" id="confirmacion" role="status" hidden></div>
@@ -1689,7 +1667,6 @@
         async reservar(c) {
           const u = usuarioActual();
           if (!u) throw new Error('SIN_SESION');
-          if (!u.admin && !u.verificado) throw new Error('NO_VERIFICADO');
           if (diaBloq(c.barberoId, c.fecha)) throw new Error('DIA_BLOQUEADO');
           if (ocupa(c.barberoId, c.fecha, c.hora)) throw new Error('OCUPADO');
           const id = crearId();
@@ -1759,27 +1736,6 @@
           throw new Error('NO_DISPONIBLE_DEMO');
         },
 
-        async reenviarVerificacion() {
-          throw new Error('NO_DISPONIBLE_DEMO');
-        },
-
-        async revisarVerificacion() {
-          const u = usuarioActual();
-          emitirSesion();
-          return !!(u && (u.admin || u.verificado));
-        },
-
-        // Solo demo: en producción el cliente verifica con el enlace que le llega al correo.
-        async simularVerificacion() {
-          const uid = leer(K.sesion, null);
-          const u = usuarios.find(x => x.uid === uid);
-          if (u) {
-            u.verificado = true;
-            guardar(K.usuarios, usuarios);
-            emitirSesion();
-          }
-        },
-
         async logout() {
           try { localStorage.removeItem(K.sesion); } catch (e) { /* ignorar */ }
           emitirSesion();
@@ -1822,7 +1778,6 @@
     const FirebaseStore = (() => {
       let fb = {};
       let registrando = null; // datos del perfil mientras se crea la cuenta
-      let cbSesion = null;    // para avisar a la app cuando cambie la verificación
 
       // Un documento por (barbero, fecha, hora): su existencia = hora ocupada.
       // Como el ID es determinista, dos clientes no pueden reservar la misma hora.
@@ -1974,28 +1929,9 @@
         },
 
         onSesion(cb) {
-          cbSesion = cb;
           fb.auth.onAuthStateChanged(fb.au, async user => {
             cb(user ? await construirUsuario(user) : null);
           });
-        },
-
-        async reenviarVerificacion() {
-          const user = fb.au.currentUser;
-          if (!user) throw new Error('SIN_SESION');
-          await fb.auth.sendEmailVerification(user);
-        },
-
-        // Vuelve a preguntar a Firebase si el correo ya fue verificado y renueva el token,
-        // porque las reglas de Firestore leen "email_verified" desde el token.
-        async revisarVerificacion() {
-          const user = fb.au.currentUser;
-          if (!user) return false;
-          await fb.auth.reload(user);
-          await fb.auth.getIdToken(user, true);
-          const u = await construirUsuario(fb.au.currentUser);
-          if (cbSesion) cbSesion(u);
-          return u.verificado;
         },
 
         async login(email, clave) {
@@ -2009,8 +1945,6 @@
           registrando = { email: correo, nombre, telefono };
           try {
             const cred = await auth.createUserWithEmailAndPassword(au, correo, clave);
-            // Si el envío falla, el cliente puede pedirlo de nuevo con "Reenviar correo".
-            try { await auth.sendEmailVerification(cred.user); } catch (e) { console.error(e); }
             await fs.setDoc(fs.doc(db, 'usuarios', cred.user.uid), { nombre, telefono });
           } finally {
             registrando = null;
@@ -2113,15 +2047,12 @@
     }
 
     // Con sesión se ve el formulario de reserva; sin sesión, la invitación a entrar.
-    // Con correo sin verificar, se pide verificar. El panel entero empieza oculto:
-    // se abre con el botón "Reservar Cita" para no taparle al cliente el resto de la página.
+    // El panel entero empieza oculto: se abre con el botón "Reservar Cita" para no
+    // taparle al cliente el resto de la página.
     function actualizarReserva() {
       const u = estado.usuario;
-      const puedeReservar = !!u && (u.admin || u.verificado);
       $('reserva-login').hidden = !!u;
-      $('reserva-verificar').hidden = !(u && !puedeReservar);
-      $('reserva-box').hidden = !puedeReservar;
-      if (u && !puedeReservar) $('verificar-correo').textContent = u.email;
+      $('reserva-box').hidden = !u;
     }
 
     function actualizarPanelReserva() {
@@ -2187,7 +2118,6 @@
       const uidAntes = estado.usuario ? estado.usuario.uid : null;
       const uidAhora = usuario ? usuario.uid : null;
       const cambio = uidAntes !== uidAhora;
-      const faltabaVerificar = !!estado.usuario && !estado.usuario.esBarbero && !estado.usuario.verificado;
 
       estado.usuario = usuario;
       estado.admin = !!(usuario && usuario.admin);
@@ -2234,10 +2164,6 @@
         mostrarVista(estado.vista);
       }
       actualizarReserva();
-
-      if (!cambio && faltabaVerificar && usuario && usuario.verificado) {
-        avisar('¡Correo verificado! Ya puedes reservar tu cita.');
-      }
     }
 
     /* =====================================================================
@@ -2282,9 +2208,7 @@
       try {
         await Store.registrar({ nombre, telefono, email, clave });
         $('form-registro').reset();
-        avisar(Store.modo === 'demo'
-          ? '¡Cuenta creada! En modo demo, simula la verificación del correo para reservar.'
-          : '¡Cuenta creada! Te enviamos un correo: verifícalo para poder reservar.');
+        avisar('¡Cuenta creada! Ya puedes reservar tu cita.');
       } catch (ex) {
         console.error(ex);
         err.textContent = mensajeAuth(ex);
@@ -2309,62 +2233,6 @@
           ? 'En modo demo no se puede recuperar la contraseña.'
           : mensajeAuth(ex);
       }
-    }
-
-    /* =====================================================================
-       VERIFICACIÓN DE CORREO
-       ===================================================================== */
-    async function verificarAhora() {
-      const btn = $('btn-verificado');
-      btn.disabled = true;
-      try {
-        const ok = await Store.revisarVerificacion();
-        if (!ok) avisar('Aún no vemos tu correo verificado. Abre el enlace que te enviamos y vuelve a pulsar este botón.', 'error');
-      } catch (err) {
-        console.error(err);
-        avisar('No se pudo comprobar la verificación. Inténtalo de nuevo.', 'error');
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    let cuentaAtras = null;
-    async function reenviarCorreo() {
-      const btn = $('btn-reenviar');
-      btn.disabled = true;
-      try {
-        await Store.reenviarVerificacion();
-        avisar('Te enviamos un nuevo correo de verificación.');
-        // Pausa de 30 s para no chocar con el límite de envíos de Firebase.
-        let seg = 30;
-        btn.textContent = `Reenviar correo (${seg}s)`;
-        clearInterval(cuentaAtras);
-        cuentaAtras = setInterval(() => {
-          seg -= 1;
-          if (seg <= 0) {
-            clearInterval(cuentaAtras);
-            btn.textContent = 'Reenviar correo';
-            btn.disabled = false;
-          } else {
-            btn.textContent = `Reenviar correo (${seg}s)`;
-          }
-        }, 1000);
-      } catch (err) {
-        btn.disabled = false;
-        if (err && err.message === 'NO_DISPONIBLE_DEMO') {
-          avisar('En modo demo no se envían correos. Usa "Simular verificación".', 'error');
-        } else {
-          console.error(err);
-          avisar(mensajeAuth(err), 'error');
-        }
-      }
-    }
-
-    // Al volver a la pestaña (por ejemplo, después de abrir el enlace del correo) se comprueba solo.
-    function comprobarAlVolver() {
-      const u = estado.usuario;
-      if (document.visibilityState !== 'visible' || !u || u.admin || u.verificado) return;
-      Store.revisarVerificacion().catch(err => console.error(err));
     }
 
     /* =====================================================================
@@ -2495,12 +2363,6 @@
         return;
       }
 
-      if (!estado.usuario.admin && !estado.usuario.verificado) {
-        avisar('Verifica tu correo para poder reservar.', 'error');
-        actualizarReserva();
-        return;
-      }
-
       const nombre = $('cliente-nombre').value.trim();
       const telefono = normalizarTelefono($('cliente-telefono').value);
       const barberoId = $('select-barbero').value;
@@ -2545,9 +2407,8 @@
           avisar(`${nombreBarbero(barberoId)} no atiende ese día.`, 'error');
           estado.horaSel = '';
           renderHorarios();
-        } else if (codigo === 'NO_VERIFICADO' || (err && err.code === 'permission-denied')) {
-          avisar('No se pudo confirmar tu cita. Verifica tu correo (o vuelve a iniciar sesión) e inténtalo de nuevo.', 'error');
-          Store.revisarVerificacion().catch(() => {});
+        } else if (err && err.code === 'permission-denied') {
+          avisar('No se pudo confirmar tu cita. Vuelve a iniciar sesión e inténtalo de nuevo.', 'error');
         } else if (codigo === 'SIN_SESION') {
           avisar('Inicia sesión para reservar tu cita.', 'error');
           abrirAcceso('login');
@@ -3028,13 +2889,6 @@
       $('form-registro').addEventListener('submit', enviarRegistro);
       $('btn-olvide').addEventListener('click', olvideClave);
 
-      // Verificación de correo
-      $('btn-verificado').addEventListener('click', verificarAhora);
-      $('btn-reenviar').addEventListener('click', reenviarCorreo);
-      $('btn-simular-verif').addEventListener('click', () => Store.simularVerificacion());
-      document.addEventListener('visibilitychange', comprobarAlVolver);
-      window.addEventListener('focus', comprobarAlVolver);
-
       // Reserva
       $('select-barbero').addEventListener('change', cambioSeleccion);
       $('select-fecha').addEventListener('change', cambioSeleccion);
@@ -3107,7 +2961,6 @@
       if (!USAR_FIREBASE) {
         $('banner-demo').hidden = false;
         $('demo-hint').hidden = false;
-        $('verificar-demo').hidden = false;
       }
 
       try {
