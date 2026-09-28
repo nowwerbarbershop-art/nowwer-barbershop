@@ -569,6 +569,94 @@
       width: auto;
     }
 
+    /* TIRA DE DÍAS (elegir día, deslizando hacia el lado) */
+    .dia-strip-wrap {
+      position: relative;
+      margin-top: 0.4rem;
+    }
+
+    .dia-strip {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      padding: 2px;
+    }
+
+    .dia-strip::-webkit-scrollbar { display: none; }
+
+    .dia-card {
+      flex: 0 0 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 10px 4px;
+      background: var(--input-bg);
+      border: 1px solid #444;
+      border-radius: 10px;
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .dia-card-abrev {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: capitalize;
+    }
+
+    .dia-card-num {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .dia-card-estado {
+      font-size: 0.65rem;
+      color: var(--success);
+    }
+
+    .dia-card:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .dia-card:disabled .dia-card-estado { color: var(--text-muted); }
+
+    .dia-card.seleccionado {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .dia-card.seleccionado .dia-card-abrev,
+    .dia-card.seleccionado .dia-card-num,
+    .dia-card.seleccionado .dia-card-estado {
+      color: #000;
+    }
+
+    .dia-flecha {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(13, 13, 13, 0.8);
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 2;
+      font-size: 1rem;
+    }
+
+    .dia-flecha-izq { left: -4px; }
+    .dia-flecha-der { right: -4px; }
+    .dia-flecha[hidden] { display: none; }
+
     /* SLOTS GRID */
     .slots-grid {
       display: grid;
@@ -1083,35 +1171,45 @@
 
             <form id="form-reserva" novalidate>
               <div class="form-group">
-                <label for="cliente-nombre"><i class="fa-solid fa-user" aria-hidden="true"></i> Nombre Completo</label>
-                <input type="text" id="cliente-nombre" maxlength="80" autocomplete="name" required placeholder="Ej. Carlos Gómez">
-              </div>
-
-              <div class="form-group">
-                <label for="cliente-telefono"><i class="fa-solid fa-phone" aria-hidden="true"></i> Teléfono / WhatsApp</label>
-                <input type="tel" id="cliente-telefono" autocomplete="tel" required placeholder="Ej. 3001234567 o +573001234567">
-              </div>
-
-              <div class="form-group">
                 <label for="select-barbero"><i class="fa-solid fa-user-ninja" aria-hidden="true"></i> Selecciona Barbero</label>
                 <select id="select-barbero" required>
                   <option value="">-- Seleccionar Barbero --</option>
                 </select>
               </div>
 
+              <input type="date" id="select-fecha" hidden>
+
               <div class="form-group">
-                <label for="select-fecha"><i class="fa-solid fa-calendar" aria-hidden="true"></i> Fecha de la Cita</label>
-                <input type="date" id="select-fecha" required>
+                <label id="lbl-dias"><i class="fa-solid fa-calendar" aria-hidden="true"></i> Elige el día</label>
+                <div class="dia-strip-wrap">
+                  <button type="button" class="dia-flecha dia-flecha-izq" id="dias-prev" aria-label="Ver días anteriores" hidden>‹</button>
+                  <div class="dia-strip" id="dia-strip" role="group" aria-labelledby="lbl-dias">
+                    <p class="empty-msg">Selecciona un barbero para ver los días disponibles.</p>
+                  </div>
+                  <button type="button" class="dia-flecha dia-flecha-der" id="dias-next" aria-label="Ver más días" hidden>›</button>
+                </div>
               </div>
 
               <div class="form-group">
                 <label id="lbl-horas"><i class="fa-solid fa-clock" aria-hidden="true"></i> Hora Disponible</label>
                 <div class="slots-grid" id="grid-horarios" role="group" aria-labelledby="lbl-horas">
-                  <small class="slots-msg">Selecciona barbero y fecha...</small>
+                  <small class="slots-msg">Selecciona barbero y día...</small>
                 </div>
               </div>
 
-              <button type="submit" class="btn" id="btn-reservar" style="margin-top: 1rem;">Confirmar Cita Ahora</button>
+              <div id="datos-cliente-wrap" hidden>
+                <div class="form-group">
+                  <label for="cliente-nombre"><i class="fa-solid fa-user" aria-hidden="true"></i> Nombre Completo</label>
+                  <input type="text" id="cliente-nombre" maxlength="80" autocomplete="name" required placeholder="Ej. Carlos Gómez">
+                </div>
+
+                <div class="form-group">
+                  <label for="cliente-telefono"><i class="fa-solid fa-phone" aria-hidden="true"></i> Teléfono / WhatsApp</label>
+                  <input type="tel" id="cliente-telefono" autocomplete="tel" required placeholder="Ej. 3001234567 o +573001234567">
+                </div>
+
+                <button type="submit" class="btn" id="btn-reservar" style="margin-top: 1rem;">Confirmar Cita Ahora</button>
+              </div>
             </form>
           </div>
         </div>
@@ -2011,6 +2109,7 @@
       horaSel: '',
       modo: 'dia',          // 'dia' | 'historico'
       resumenPeriodo: 'dia', // 'dia' | 'semana' | 'mes'
+      reservando: false,    // true mientras se guarda mi propia reserva
       vista: 'cliente',     // 'cliente' | 'login' | 'barbero'
       reservaAbierta: false // el panel "Reservar Cita" empieza oculto
     };
@@ -2075,7 +2174,9 @@
     function limpiarFormularioReserva() {
       $('form-reserva').reset();
       $('confirmacion').hidden = true;
+      $('datos-cliente-wrap').hidden = true;
       estado.horaSel = '';
+      renderDiaStrip();
       renderHorarios();
     }
 
@@ -2253,6 +2354,68 @@
     const diaBloqueado = (barberoId, fecha) =>
       estado.diasBloqueados.some(d => d.barberoId === barberoId && d.fecha === fecha);
 
+    const DIAS_ABREV = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const DIAS_STRIP_CANTIDAD = 30; // "un mes completo"; se recalcula desde hoy cada vez que se abre
+
+    // Tira horizontal de días (hoy + 30), con cuántos cupos libres tiene CADA día
+    // para el barbero elegido. Los días cerrados (por horario semanal o por
+    // descanso de ese barbero) salen deshabilitados, sin quitarlos de la tira.
+    function renderDiaStrip() {
+      const cont = $('dia-strip');
+      const barberoId = $('select-barbero').value;
+      cont.replaceChildren();
+
+      if (!barberoId) {
+        cont.appendChild(el('p', 'empty-msg', 'Selecciona un barbero para ver los días disponibles.'));
+        $('dias-prev').hidden = true;
+        $('dias-next').hidden = true;
+        return;
+      }
+
+      const hoy = fechaLocal();
+      const fechaElegida = $('select-fecha').value;
+
+      for (let i = 0; i < DIAS_STRIP_CANTIDAD; i++) {
+        const fecha = sumarDias(hoy, i);
+        const d = new Date(fecha + 'T12:00:00');
+        const horasDia = horasDelDia(fecha);
+        const cerrado = horasDia.length === 0 || diaBloqueado(barberoId, fecha);
+
+        let libres = 0;
+        if (!cerrado) {
+          const ocupadas = new Set(
+            estado.ocupados.filter(o => o.barberoId === barberoId && o.fecha === fecha).map(o => o.hora)
+          );
+          libres = horasDia.filter(h => !ocupadas.has(h) && !horaPasada(fecha, h)).length;
+        }
+        const sinCupos = !cerrado && libres === 0;
+
+        const btn = el('button', 'dia-card' + (fecha === fechaElegida ? ' seleccionado' : ''));
+        btn.type = 'button';
+        btn.disabled = cerrado || sinCupos;
+        btn.dataset.fecha = fecha;
+
+        const estadoTexto = cerrado ? 'Cerrado' : sinCupos ? 'Sin cupos' : `${libres} libre${libres === 1 ? '' : 's'}`;
+
+        btn.append(
+          el('span', 'dia-card-abrev', i === 0 ? 'Hoy' : DIAS_ABREV[d.getDay()]),
+          el('span', 'dia-card-num', String(d.getDate())),
+          el('span', 'dia-card-estado', estadoTexto)
+        );
+
+        if (!cerrado && !sinCupos) {
+          btn.addEventListener('click', () => {
+            $('select-fecha').value = fecha;
+            $('select-fecha').dispatchEvent(new Event('change'));
+          });
+        }
+        cont.appendChild(btn);
+      }
+
+      $('dias-prev').hidden = false;
+      $('dias-next').hidden = false;
+    }
+
     function mensajeHorarios(texto, advertencia) {
       return el('small', 'slots-msg' + (advertencia ? ' warn' : ''), texto);
     }
@@ -2264,8 +2427,9 @@
       grid.replaceChildren();
 
       if (!barberoId || !fecha) {
-        grid.appendChild(mensajeHorarios('Selecciona barbero y fecha...'));
+        grid.appendChild(mensajeHorarios('Selecciona barbero y día...'));
         estado.horaSel = '';
+        $('datos-cliente-wrap').hidden = true;
         return;
       }
 
@@ -2274,6 +2438,7 @@
       if (horas.length === 0) {
         grid.appendChild(mensajeHorarios('Ese día no atendemos. Elige otra fecha.', true));
         estado.horaSel = '';
+        $('datos-cliente-wrap').hidden = true;
         return;
       }
 
@@ -2281,6 +2446,7 @@
       if (diaBloqueado(barberoId, fecha)) {
         grid.appendChild(mensajeHorarios(`${nombreBarbero(barberoId)} no atiende ese día. Elige otra fecha u otro barbero.`, true));
         estado.horaSel = '';
+        $('datos-cliente-wrap').hidden = true;
         return;
       }
 
@@ -2291,7 +2457,8 @@
       // Si alguien más tomó la hora que yo tenía elegida, se avisa y se limpia.
       if (estado.horaSel && ocupadas.has(estado.horaSel)) {
         estado.horaSel = '';
-        avisar('Esa hora acaba de ser tomada. Elige otra.', 'error');
+        // Si la ocupó mi propia reserva (recién guardada), no es un error.
+        if (!estado.reservando) avisar('Esa hora acaba de ser tomada. Elige otra.', 'error');
       }
 
       horas.forEach(hora => {
@@ -2314,15 +2481,20 @@
             });
             btn.classList.add('selected');
             btn.setAttribute('aria-pressed', 'true');
+            $('datos-cliente-wrap').hidden = false;
           });
         }
         grid.appendChild(btn);
       });
+      // Si la hora elegida se perdió (la tomaron, ya pasó), se ocultan de nuevo los datos.
+      $('datos-cliente-wrap').hidden = !estado.horaSel;
     }
 
-    // Al cambiar barbero o fecha la hora elegida deja de ser válida.
+    // Al cambiar barbero o día la hora elegida deja de ser válida.
     function cambioSeleccion() {
       estado.horaSel = '';
+      $('datos-cliente-wrap').hidden = true;
+      renderDiaStrip();
       renderHorarios();
     }
 
@@ -2341,6 +2513,7 @@
         $('select-barbero').value = '';
         $('select-fecha').value = '';
         estado.horaSel = '';
+        renderDiaStrip();
         renderHorarios();
       };
 
@@ -2383,6 +2556,7 @@
 
       const btn = $('btn-reservar');
       btn.disabled = true;
+      estado.reservando = true; // mi propia reserva también actualiza las horas ocupadas
       try {
         const cita = { clienteNombre: nombre, clienteTelefono: telefono, barberoId, fecha, hora, uid: estado.usuario.uid };
         const citaId = await Store.reservar(cita);
@@ -2417,6 +2591,7 @@
           avisar('No se pudo guardar la cita. Revisa tu conexión e inténtalo de nuevo.', 'error');
         }
       } finally {
+        estado.reservando = false;
         btn.disabled = false;
       }
     }
@@ -2890,9 +3065,19 @@
       $('btn-olvide').addEventListener('click', olvideClave);
 
       // Reserva
-      $('select-barbero').addEventListener('change', cambioSeleccion);
+      $('select-barbero').addEventListener('change', () => {
+        // Otro barbero puede tener otros días abiertos: se vuelve a elegir el día.
+        $('select-fecha').value = '';
+        cambioSeleccion();
+      });
       $('select-fecha').addEventListener('change', cambioSeleccion);
       $('form-reserva').addEventListener('submit', enviarReserva);
+      $('dias-prev').addEventListener('click', () => {
+        $('dia-strip').scrollBy({ left: -220, behavior: 'smooth' });
+      });
+      $('dias-next').addEventListener('click', () => {
+        $('dia-strip').scrollBy({ left: 220, behavior: 'smooth' });
+      });
 
       // Galería y visor (delegado: las fotos se crean después, en renderGaleria)
       $('gallery-grid').addEventListener('click', ev => {
@@ -2977,10 +3162,12 @@
 
       Store.suscribirOcupados(lista => {
         estado.ocupados = lista;
+        renderDiaStrip();
         renderHorarios();
       });
       Store.suscribirDiasBloqueados(lista => {
         estado.diasBloqueados = lista;
+        renderDiaStrip();
         renderHorarios();
         renderPanel();
       });
