@@ -714,6 +714,27 @@
 
     .confirmacion strong { color: var(--success); }
 
+    .confirmacion {
+      text-align: center;
+      align-items: center;
+      padding: 1.6rem 1.2rem;
+    }
+
+    .confirmacion-check {
+      font-size: 3rem;
+      color: var(--success);
+    }
+
+    .confirmacion-titulo {
+      font-size: 1.3rem;
+    }
+
+    .confirmacion-detalle {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
     .confirmacion-nota {
       color: var(--text-muted);
       font-size: 0.85rem;
@@ -2110,6 +2131,7 @@
       modo: 'dia',          // 'dia' | 'historico'
       resumenPeriodo: 'dia', // 'dia' | 'semana' | 'mes'
       reservando: false,    // true mientras se guarda mi propia reserva
+      misCitasLista: [],    // últimas citas propias, para el aviso "ya tienes una cita"
       vista: 'cliente',     // 'cliente' | 'login' | 'barbero'
       reservaAbierta: false // el panel "Reservar Cita" empieza oculto
     };
@@ -2173,6 +2195,7 @@
 
     function limpiarFormularioReserva() {
       $('form-reserva').reset();
+      $('form-reserva').hidden = false;
       $('confirmacion').hidden = true;
       $('datos-cliente-wrap').hidden = true;
       estado.horaSel = '';
@@ -2197,6 +2220,8 @@
     // quedó claro si la primera sí se guardó).
     function renderMisCitasAviso(lista) {
       const cont = $('mis-citas-aviso');
+      estado.misCitasLista = lista || [];
+      if (!$('confirmacion').hidden) { cont.hidden = true; return; }
       const futuras = (lista || [])
         .filter(c => !horaPasada(c.fecha, c.hora))
         .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.hora.localeCompare(b.hora));
@@ -2501,9 +2526,13 @@
     function mostrarConfirmacion(cita) {
       const box = $('confirmacion');
       box.replaceChildren();
-      box.appendChild(el('strong', null, '¡Tu cita ha sido agendada con éxito!'));
-      box.appendChild(el('span', null, `${nombreBarbero(cita.barberoId)} · ${cita.fecha} · ${cita.hora}`));
-      box.appendChild(el('span', 'confirmacion-nota', 'Te llegará la confirmación por correo (y por Telegram, si lo conectaste).'));
+
+      const icono_ok = el('i', 'fa-solid fa-circle-check confirmacion-check');
+      icono_ok.setAttribute('aria-hidden', 'true');
+      box.appendChild(icono_ok);
+      box.appendChild(el('strong', 'confirmacion-titulo', '¡Tu cita ha sido confirmada!'));
+      box.appendChild(el('span', 'confirmacion-detalle', `${nombreBarbero(cita.barberoId)} · ${cita.fecha} · ${cita.hora}`));
+      box.appendChild(el('span', 'confirmacion-nota', 'Ya quedó agendada, no tienes que hacer nada más. Te llegará el aviso por correo (y por Telegram, si lo conectaste).'));
 
       const cerrarConfirmacion = () => {
         box.hidden = true;
@@ -2513,6 +2542,8 @@
         $('select-barbero').value = '';
         $('select-fecha').value = '';
         estado.horaSel = '';
+        $('form-reserva').hidden = false;
+        renderMisCitasAviso(estado.misCitasLista);
         renderDiaStrip();
         renderHorarios();
       };
@@ -2523,8 +2554,12 @@
       btnListo.addEventListener('click', cerrarConfirmacion);
       box.appendChild(btnListo);
 
+      // Se esconde el selector (días y horas) y el aviso de "ya tienes una cita":
+      // queda solo el mensaje de confirmación, para que el cliente se quede tranquilo.
+      $('form-reserva').hidden = true;
+      $('mis-citas-aviso').hidden = true;
       box.hidden = false;
-      box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     async function enviarReserva(e) {
