@@ -624,6 +624,33 @@
 
     .dia-card:disabled .dia-card-estado { color: var(--text-muted); }
 
+    /* En la agenda del barbero: días cerrados o de descanso, y días sin citas */
+    .dia-card.inactivo { opacity: 0.5; }
+    #bdia-strip .dia-card-estado { color: var(--primary); }
+    #bdia-strip .dia-card.sin-citas .dia-card-estado,
+    #bdia-strip .dia-card.inactivo .dia-card-estado { color: var(--text-muted); }
+    #bdia-strip .dia-card.seleccionado .dia-card-estado { color: #000; }
+
+    .historico-controles {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .historico-controles input { flex: 1; }
+    .historico-controles .btn { width: auto; padding: 12px 16px; }
+
+    .bloqueos-botones {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .bloqueos-botones .btn {
+      flex: 1 1 150px;
+      width: auto;
+    }
+
     .dia-card.seleccionado {
       background: var(--primary);
       border-color: var(--primary);
@@ -1313,29 +1340,47 @@
         </div>
       </div>
 
-      <!-- Filtros de lista -->
-      <div class="panel-toolbar">
-        <div class="subtabs" role="tablist">
-          <button type="button" class="subtab-btn active" data-modo="dia">Por día</button>
-          <button type="button" class="subtab-btn" data-modo="historico">Histórico completo</button>
-        </div>
-
-        <div class="toolbar-controls">
-          <select id="filtro-barbero-panel" aria-label="Filtrar por barbero">
-            <option value="">Todos los barberos</option>
-          </select>
-          <input type="date" id="filtro-fecha-barbero" aria-label="Filtrar por fecha">
-          <button type="button" class="btn btn-danger" id="btn-bloquear">
-            <i class="fa-solid fa-ban" aria-hidden="true"></i> Bloquear Hora
-          </button>
-        </div>
+      <!-- BARBERO (solo lo ve el dueño): para mirar a todos o a uno -->
+      <div class="form-group" id="filtro-barbero-wrap" hidden>
+        <label for="filtro-barbero-panel"><i class="fa-solid fa-user-ninja" aria-hidden="true"></i> Barbero</label>
+        <select id="filtro-barbero-panel" aria-label="Filtrar por barbero">
+          <option value="">Todos los barberos</option>
+        </select>
       </div>
 
-      <!-- LISTA DE CITAS -->
-      <div class="cards-list" id="lista-citas-barbero"></div>
+      <!-- AGENDA: fila de días con cuántas citas tiene cada uno -->
+      <div class="dias-panel">
+        <div class="section-title" style="margin-bottom: 0.8rem;">
+          <i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Agenda
+        </div>
+        <div class="subtabs" role="tablist" style="margin-bottom: 1rem;">
+          <button type="button" class="subtab-btn active" data-modo="dia">Por día</button>
+          <button type="button" class="subtab-btn" data-modo="historico">Histórico</button>
+        </div>
+
+        <div id="agenda-dia-wrap">
+          <div class="dia-strip-wrap">
+            <button type="button" class="dia-flecha dia-flecha-izq" id="bdias-prev" aria-label="Ver días anteriores" hidden>‹</button>
+            <div class="dia-strip" id="bdia-strip" role="group" aria-label="Días con sus citas"></div>
+            <button type="button" class="dia-flecha dia-flecha-der" id="bdias-next" aria-label="Ver más días" hidden>›</button>
+          </div>
+          <p class="hint" id="agenda-dia-texto" style="margin: 0.7rem 0 0;"></p>
+        </div>
+
+        <div id="agenda-historico-wrap" hidden>
+          <label for="filtro-fecha-historico">Ver qué pasó en una fecha (déjalo vacío para ver todo):</label>
+          <div class="historico-controles">
+            <input type="date" id="filtro-fecha-historico" aria-label="Fecha del histórico">
+            <button type="button" class="btn btn-secondary" id="btn-historico-todo">Ver todo</button>
+          </div>
+        </div>
+
+        <input type="date" id="filtro-fecha-barbero" hidden>
+        <div class="cards-list" id="lista-citas-barbero" style="margin-top: 1rem;"></div>
+      </div>
 
       <!-- RESUMEN DE CITAS -->
-      <div class="dias-panel" style="margin-top: 1.5rem;">
+      <div class="dias-panel">
         <div class="section-title" style="margin-bottom: 0.8rem;">
           <i class="fa-solid fa-chart-column" aria-hidden="true"></i> Resumen de Citas
         </div>
@@ -1376,16 +1421,22 @@
         </div>
       </div>
 
-      <!-- DÍAS DE DESCANSO -->
+      <!-- BLOQUEOS: horas sueltas y días de descanso, juntos -->
       <div class="dias-panel">
-        <div class="dias-header">
-          <div class="section-title">
-            <i class="fa-solid fa-umbrella-beach" aria-hidden="true"></i> Días de descanso
-          </div>
+        <div class="section-title" style="margin-bottom: 0.8rem;">
+          <i class="fa-solid fa-ban" aria-hidden="true"></i> Bloqueos
+        </div>
+        <div class="bloqueos-botones">
+          <button type="button" class="btn btn-danger" id="btn-bloquear">
+            <i class="fa-solid fa-ban" aria-hidden="true"></i> Bloquear hora
+          </button>
           <button type="button" class="btn btn-secondary" id="btn-bloquear-dia">
             <i class="fa-solid fa-calendar-xmark" aria-hidden="true"></i> Bloquear día(s)
           </button>
         </div>
+        <p class="hint" style="margin: 1rem 0 0.6rem;">
+          <i class="fa-solid fa-umbrella-beach" aria-hidden="true"></i> Días de descanso próximos
+        </p>
         <div class="chips" id="lista-dias-bloqueados"></div>
       </div>
 
@@ -2723,7 +2774,7 @@
     // Cuenta las citas de "todas" (ya filtradas por barbero) dentro del período
     // elegido (día/semana/mes), usando el selector de fecha del panel como referencia.
     function renderResumen(todas) {
-      const fecha = $('filtro-fecha-barbero').value || fechaLocal();
+      const fecha = fechaReferenciaPanel();
       let desde = fecha, hasta = fecha, texto = `Día: ${fecha}`;
       if (estado.resumenPeriodo === 'semana') {
         desde = inicioSemana(fecha); hasta = finSemana(fecha);
@@ -2773,10 +2824,67 @@
       $('clientes-total').textContent = `Total de clientes: ${clientes.length}`;
     }
 
+    // Fecha de referencia del panel: la que se ve en la agenda (o la del histórico).
+    function fechaReferenciaPanel() {
+      const fh = $('filtro-fecha-historico').value;
+      if (estado.modo === 'historico' && fh) return fh;
+      return $('filtro-fecha-barbero').value || fechaLocal();
+    }
+
+    // Fila de días del barbero: hoy + 30 días, con cuántas citas tiene cada uno.
+    // Los días cerrados o de descanso salen opacos, pero se pueden tocar para ver el detalle.
+    function renderAgendaStrip(todas) {
+      const cont = $('bdia-strip');
+      const scrollPrevio = cont.scrollLeft;
+      cont.replaceChildren();
+
+      const hoy = fechaLocal();
+      const elegida = $('filtro-fecha-barbero').value || hoy;
+      const filtroBarbero = filtroActivoBarbero();
+      const barberosVista = filtroBarbero ? [filtroBarbero] : Object.keys(BARBEROS);
+
+      const porFecha = {};
+      todas.filter(c => c.estado !== 'bloqueada' && c.estado !== 'cancelada')
+        .forEach(c => { porFecha[c.fecha] = (porFecha[c.fecha] || 0) + 1; });
+
+      for (let i = 0; i <= 30; i++) {
+        const fecha = sumarDias(hoy, i);
+        const d = new Date(fecha + 'T12:00:00');
+        const cerrado = horasDelDia(fecha).length === 0;
+        const descanso = !cerrado && barberosVista.every(b => diaBloqueado(b, fecha));
+        const n = porFecha[fecha] || 0;
+
+        let clases = 'dia-card';
+        if (fecha === elegida) clases += ' seleccionado';
+        if (cerrado || descanso) clases += ' inactivo';
+        else if (n === 0) clases += ' sin-citas';
+
+        const btn = el('button', clases);
+        btn.type = 'button';
+        btn.dataset.fecha = fecha;
+        btn.append(
+          el('span', 'dia-card-abrev', i === 0 ? 'Hoy' : DIAS_ABREV[d.getDay()]),
+          el('span', 'dia-card-num', String(d.getDate())),
+          el('span', 'dia-card-estado', cerrado ? 'Cerrado' : descanso ? 'Descanso' : `${n} cita${n === 1 ? '' : 's'}`)
+        );
+        btn.addEventListener('click', () => {
+          $('filtro-fecha-barbero').value = fecha;
+          renderPanel();
+        });
+        cont.appendChild(btn);
+      }
+      cont.scrollLeft = scrollPrevio;
+      $('bdias-prev').hidden = false;
+      $('bdias-next').hidden = false;
+
+      const texto = new Date(elegida + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+      $('agenda-dia-texto').textContent = texto.charAt(0).toUpperCase() + texto.slice(1);
+    }
+
     function renderPanel() {
       if (!estado.esBarbero) return;
 
-      $('filtro-barbero-panel').hidden = !estado.admin;
+      $('filtro-barbero-wrap').hidden = !estado.admin;
       const sub = $('panel-subtitulo');
       sub.hidden = estado.admin;
       if (!estado.admin) sub.textContent = `Viendo la agenda de ${nombreBarbero(estado.miBarberoId)}`;
@@ -2793,6 +2901,10 @@
       $('cnt-pendientes').textContent = deHoy.filter(c => c.estado === 'pendiente').length;
       $('cnt-completadas').textContent = deHoy.filter(c => c.estado === 'completada').length;
 
+      $('agenda-dia-wrap').hidden = estado.modo !== 'dia';
+      $('agenda-historico-wrap').hidden = estado.modo !== 'historico';
+
+      renderAgendaStrip(todas);
       renderDiasBloqueados();
       renderResumen(todas);
       renderClientes(todas);
@@ -2804,7 +2916,11 @@
         lista = todas.filter(c => c.fecha === fecha).sort((a, b) => a.hora.localeCompare(b.hora));
         avisos = estado.diasBloqueados.filter(d => d.fecha === fecha && (!filtroBarbero || d.barberoId === filtroBarbero));
       } else {
-        lista = [...todas].sort((a, b) => b.fecha.localeCompare(a.fecha) || a.hora.localeCompare(b.hora));
+        // Histórico: con una fecha elegida se ve qué pasó ese día; sin fecha, todo.
+        const fh = $('filtro-fecha-historico').value;
+        lista = todas.filter(c => !fh || c.fecha === fh)
+          .sort((a, b) => b.fecha.localeCompare(a.fecha) || a.hora.localeCompare(b.hora));
+        if (fh) avisos = estado.diasBloqueados.filter(d => d.fecha === fh && (!filtroBarbero || d.barberoId === filtroBarbero));
       }
 
       const cont = $('lista-citas-barbero');
@@ -3140,7 +3256,6 @@
         b.addEventListener('click', () => {
           estado.modo = b.dataset.modo;
           document.querySelectorAll('#view-barbero .subtab-btn:not(.resumen-tab)').forEach(x => x.classList.toggle('active', x === b));
-          $('filtro-fecha-barbero').hidden = estado.modo === 'historico';
           renderPanel();
         });
       });
@@ -3153,6 +3268,13 @@
       });
       $('filtro-fecha-barbero').addEventListener('change', renderPanel);
       $('filtro-barbero-panel').addEventListener('change', renderPanel);
+      $('filtro-fecha-historico').addEventListener('change', renderPanel);
+      $('btn-historico-todo').addEventListener('click', () => {
+        $('filtro-fecha-historico').value = '';
+        renderPanel();
+      });
+      $('bdias-prev').addEventListener('click', () => $('bdia-strip').scrollBy({ left: -220, behavior: 'smooth' }));
+      $('bdias-next').addEventListener('click', () => $('bdia-strip').scrollBy({ left: 220, behavior: 'smooth' }));
 
       $('btn-bloquear').addEventListener('click', abrirBloqueo);
       $('btn-bloq-cancelar').addEventListener('click', () => $('dlg-bloqueo').close());
