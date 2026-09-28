@@ -2913,7 +2913,9 @@
       let avisos = [];
       if (estado.modo === 'dia') {
         const fecha = $('filtro-fecha-barbero').value || hoy;
-        lista = todas.filter(c => c.fecha === fecha).sort((a, b) => a.hora.localeCompare(b.hora));
+        // Las canceladas no se muestran en el día (confunden: la fila del día no las cuenta);
+        // siguen guardadas y se ven en el Histórico.
+        lista = todas.filter(c => c.fecha === fecha && c.estado !== 'cancelada').sort((a, b) => a.hora.localeCompare(b.hora));
         avisos = estado.diasBloqueados.filter(d => d.fecha === fecha && (!filtroBarbero || d.barberoId === filtroBarbero));
       } else {
         // Histórico: con una fecha elegida se ve qué pasó ese día; sin fecha, todo.
