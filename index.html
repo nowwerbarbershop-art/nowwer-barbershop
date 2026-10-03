@@ -631,6 +631,20 @@
     #bdia-strip .dia-card.inactivo .dia-card-estado { color: var(--text-muted); }
     #bdia-strip .dia-card.seleccionado .dia-card-estado { color: #000; }
 
+    .festivo-aviso {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      padding: 0.7rem 0.9rem;
+      margin-top: 0.7rem;
+      font-size: 0.85rem;
+    }
+
     .historico-controles {
       display: flex;
       gap: 10px;
@@ -1365,6 +1379,10 @@
             <button type="button" class="dia-flecha dia-flecha-der" id="bdias-next" aria-label="Ver más días" hidden>›</button>
           </div>
           <p class="hint" id="agenda-dia-texto" style="margin: 0.7rem 0 0;"></p>
+          <div class="festivo-aviso" id="festivo-aviso" hidden>
+            <span id="festivo-aviso-texto"></span>
+            <button type="button" class="btn btn-secondary" id="btn-festivo-toggle" style="width:auto; padding:8px 14px;"></button>
+          </div>
         </div>
 
         <div id="agenda-historico-wrap" hidden>
@@ -1735,14 +1753,16 @@
       const K = {
         citas: 'barber_demo_citas',
         dias: 'barber_demo_dias',
+        festivos: 'barber_demo_festivos',
         usuarios: 'barber_demo_usuarios',
         sesion: 'barber_demo_sesion',
         perfilStaff: 'barber_demo_perfil_staff'
       };
       const oyentes = new Set();         // cambios en citas
       const oyentesDias = new Set();     // cambios en días bloqueados
+      const oyentesFestivos = new Set(); // cambios en festivos habilitados
       const oyentesSesion = new Set();
-      let citas = [], dias = [], usuarios = [], perfilStaff = {};
+      let citas = [], dias = [], festivos = [], usuarios = [], perfilStaff = {};
 
       const leer = (k, def) => {
         try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) { /* ignorar */ }
@@ -1766,12 +1786,14 @@
         const c = leer(K.citas, null);
         if (c) { citas = c; } else { citas = semilla(); guardar(K.citas, citas); }
         dias = leer(K.dias, []);
+        festivos = leer(K.festivos, []);
         usuarios = leer(K.usuarios, []);
         perfilStaff = leer(K.perfilStaff, {});
       }
 
       const emitir = () => oyentes.forEach(fn => fn());
       const emitirDias = () => oyentesDias.forEach(fn => fn());
+      const emitirFestivos = () => oyentesFestivos.forEach(fn => fn());
       const ocupa = (b, f, h) => citas.some(c => c.barberoId === b && c.fecha === f && c.hora === h && ESTADOS_QUE_OCUPAN.includes(c.estado));
       const diaBloq = (b, f) => dias.some(d => d.barberoId === b && d.fecha === f);
 
@@ -1828,6 +1850,10 @@
           return suscribir(oyentesDias, () => cb(dias.map(d => ({ ...d }))));
         },
 
+        suscribirFestivosHabilitados(cb) {
+          return suscribir(oyentesFestivos, () => cb(festivos.map(f => ({ ...f }))));
+        },
+
         suscribirCitas(cb, soloBarberoId) {
           return suscribir(oyentes, () => cb(
             citas.filter(c => !soloBarberoId || c.barberoId === soloBarberoId).map(c => ({ ...c }))
@@ -1870,6 +1896,20 @@
           dias = dias.filter(d => !(d.barberoId === barberoId && fechas.includes(d.fecha)));
           guardar(K.dias, dias);
           emitirDias();
+        },
+
+        async habilitarFestivo(barberoId, fecha) {
+          if (!festivos.some(f => f.barberoId === barberoId && f.fecha === fecha)) {
+            festivos.push({ barberoId, fecha });
+            guardar(K.festivos, festivos);
+            emitirFestivos();
+          }
+        },
+
+        async deshabilitarFestivo(barberoId, fecha) {
+          festivos = festivos.filter(f => !(f.barberoId === barberoId && f.fecha === fecha));
+          guardar(K.festivos, festivos);
+          emitirFestivos();
         },
 
         onSesion(cb) {
@@ -2032,6 +2072,19 @@
           );
         },
 
+        // Festivos que un barbero decidió habilitar (trabajar ese día), por eso.
+        suscribirFestivosHabilitados(cb) {
+          const { fs, db } = fb;
+          const q = fs.query(fs.collection(db, 'festivosHabilitados'), fs.where('fecha', '>=', fechaLocal()));
+          return fs.onSnapshot(q,
+            snap => cb(snap.docs.map(d => {
+              const { barberoId, fecha } = d.data();
+              return { barberoId, fecha };
+            })),
+            err => { console.error(err); avisar('No se pudieron cargar los festivos habilitados.', 'error'); }
+          );
+        },
+
         // El dueño (claim admin) ve todas las citas; un empleado solo las suyas
         // (la consulta debe traer ya filtrado, tal como lo exigen las reglas de Firestore).
         suscribirCitas(cb, soloBarberoId) {
@@ -2096,6 +2149,16 @@
           const batch = fs.writeBatch(db);
           fechas.forEach(f => batch.delete(fs.doc(db, 'diasBloqueados', diaId(barberoId, f))));
           await batch.commit();
+        },
+
+        async habilitarFestivo(barberoId, fecha) {
+          const { fs, db } = fb;
+          await fs.setDoc(fs.doc(db, 'festivosHabilitados', diaId(barberoId, fecha)), { barberoId, fecha });
+        },
+
+        async deshabilitarFestivo(barberoId, fecha) {
+          const { fs, db } = fb;
+          await fs.deleteDoc(fs.doc(db, 'festivosHabilitados', diaId(barberoId, fecha)));
         },
 
         onSesion(cb) {
@@ -2178,6 +2241,7 @@
       citas: [],
       ocupados: [],
       diasBloqueados: [],
+      festivosHabilitados: [],
       horaSel: '',
       modo: 'dia',          // 'dia' | 'historico'
       resumenPeriodo: 'dia', // 'dia' | 'semana' | 'mes'
@@ -2430,6 +2494,55 @@
     const diaBloqueado = (barberoId, fecha) =>
       estado.diasBloqueados.some(d => d.barberoId === barberoId && d.fecha === fecha);
 
+    /* ============== FESTIVOS DE COLOMBIA (se calculan solos, cada año) ==============
+       Los de fecha fija son directos. Los que mueven de fecha (Semana Santa y los que
+       "Ley Emiliani" traslada al lunes siguiente) se calculan a partir del Domingo de
+       Pascua, con el algoritmo estándar de Gauss/Meeus. */
+    function domingoPascua(anio) {
+      const a = anio % 19, b = Math.floor(anio / 100), c = anio % 100;
+      const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+      const g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30;
+      const i = Math.floor(c / 4), k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7;
+      const m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const mes = Math.floor((h + l - 7 * m + 114) / 31);
+      const dia = ((h + l - 7 * m + 114) % 31) + 1;
+      return new Date(anio, mes - 1, dia, 12); // mediodía: evita saltos de día por horario
+    }
+
+    const sumarDiasFecha = (fecha, n) => { const d = new Date(fecha); d.setDate(d.getDate() + n); return d; };
+
+    // "Ley Emiliani": si no cae lunes, se traslada al lunes siguiente.
+    const trasladarALunes = fecha => sumarDiasFecha(fecha, (8 - fecha.getDay()) % 7);
+
+    function festivosColombia(anio) {
+      const pascua = domingoPascua(anio);
+      const fijo = (mes, dia) => new Date(anio, mes - 1, dia, 12);
+      return [
+        fijo(1, 1), trasladarALunes(fijo(1, 6)), trasladarALunes(fijo(3, 19)),
+        sumarDiasFecha(pascua, -3), sumarDiasFecha(pascua, -2),
+        fijo(5, 1),
+        trasladarALunes(sumarDiasFecha(pascua, 39)), trasladarALunes(sumarDiasFecha(pascua, 60)),
+        trasladarALunes(sumarDiasFecha(pascua, 68)), trasladarALunes(fijo(6, 29)),
+        fijo(7, 20), fijo(8, 7), trasladarALunes(fijo(8, 15)),
+        trasladarALunes(fijo(10, 12)), trasladarALunes(fijo(11, 1)), trasladarALunes(fijo(11, 11)),
+        fijo(12, 8), fijo(12, 25)
+      ].map(d => fechaLocal(d));
+    }
+
+    // Caché sencilla por año (son solo 18 fechas por año; recalcular no cuesta nada,
+    // pero así no se repite el cálculo en cada tarjeta de la fila).
+    const _cacheFestivos = {};
+    function esFestivo(fecha) {
+      const anio = Number(fecha.slice(0, 4));
+      if (!_cacheFestivos[anio]) _cacheFestivos[anio] = new Set(festivosColombia(anio));
+      return _cacheFestivos[anio].has(fecha);
+    }
+
+    const festivoHabilitado = (barberoId, fecha) =>
+      estado.festivosHabilitados.some(f => f.barberoId === barberoId && f.fecha === fecha);
+
     const DIAS_ABREV = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
     const DIAS_STRIP_CANTIDAD = 30; // "un mes completo"; se recalcula desde hoy cada vez que se abre
 
@@ -2455,7 +2568,8 @@
         const fecha = sumarDias(hoy, i);
         const d = new Date(fecha + 'T12:00:00');
         const horasDia = horasDelDia(fecha);
-        const cerrado = horasDia.length === 0 || diaBloqueado(barberoId, fecha);
+        const festivo = esFestivo(fecha) && !festivoHabilitado(barberoId, fecha);
+        const cerrado = horasDia.length === 0 || diaBloqueado(barberoId, fecha) || festivo;
 
         let libres = 0;
         if (!cerrado) {
@@ -2471,7 +2585,7 @@
         btn.disabled = cerrado || sinCupos;
         btn.dataset.fecha = fecha;
 
-        const estadoTexto = cerrado ? 'Cerrado' : sinCupos ? 'Sin cupos' : `${libres} libre${libres === 1 ? '' : 's'}`;
+        const estadoTexto = festivo ? 'Festivo' : cerrado ? 'Cerrado' : sinCupos ? 'Sin cupos' : `${libres} libre${libres === 1 ? '' : 's'}`;
 
         btn.append(
           el('span', 'dia-card-abrev', i === 0 ? 'Hoy' : DIAS_ABREV[d.getDay()]),
@@ -2852,11 +2966,12 @@
         const d = new Date(fecha + 'T12:00:00');
         const cerrado = horasDelDia(fecha).length === 0;
         const descanso = !cerrado && barberosVista.every(b => diaBloqueado(b, fecha));
+        const festivo = !cerrado && esFestivo(fecha) && barberosVista.every(b => !festivoHabilitado(b, fecha));
         const n = porFecha[fecha] || 0;
 
         let clases = 'dia-card';
         if (fecha === elegida) clases += ' seleccionado';
-        if (cerrado || descanso) clases += ' inactivo';
+        if (cerrado || descanso || festivo) clases += ' inactivo';
         else if (n === 0) clases += ' sin-citas';
 
         const btn = el('button', clases);
@@ -2865,7 +2980,7 @@
         btn.append(
           el('span', 'dia-card-abrev', i === 0 ? 'Hoy' : DIAS_ABREV[d.getDay()]),
           el('span', 'dia-card-num', String(d.getDate())),
-          el('span', 'dia-card-estado', cerrado ? 'Cerrado' : descanso ? 'Descanso' : `${n} cita${n === 1 ? '' : 's'}`)
+          el('span', 'dia-card-estado', festivo ? 'Festivo' : cerrado ? 'Cerrado' : descanso ? 'Descanso' : `${n} cita${n === 1 ? '' : 's'}`)
         );
         btn.addEventListener('click', () => {
           $('filtro-fecha-barbero').value = fecha;
@@ -2879,6 +2994,46 @@
 
       const texto = new Date(elegida + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
       $('agenda-dia-texto').textContent = texto.charAt(0).toUpperCase() + texto.slice(1);
+    }
+
+    // Si el día elegido en la agenda es festivo, ofrece habilitarlo (o deshabilitarlo
+    // si ya estaba habilitado) para el barbero que se esté viendo en ese momento.
+    function renderFestivoAviso() {
+      const aviso = $('festivo-aviso');
+      const fecha = $('filtro-fecha-barbero').value || fechaLocal();
+      const barberoId = filtroActivoBarbero();
+
+      if (estado.modo !== 'dia' || !esFestivo(fecha)) {
+        aviso.hidden = true;
+        return;
+      }
+
+      if (!barberoId) {
+        aviso.hidden = false;
+        $('festivo-aviso-texto').textContent = 'Este día es festivo. Elige un barbero arriba para habilitarlo o no.';
+        $('btn-festivo-toggle').hidden = true;
+        return;
+      }
+
+      $('btn-festivo-toggle').hidden = false;
+      const habilitado = festivoHabilitado(barberoId, fecha);
+      aviso.hidden = false;
+      $('festivo-aviso-texto').textContent = habilitado
+        ? `✓ ${nombreBarbero(barberoId)} va a trabajar este festivo.`
+        : `Este día es festivo. Por defecto, ${nombreBarbero(barberoId)} no atiende.`;
+      $('btn-festivo-toggle').textContent = habilitado ? 'Deshabilitar' : 'Habilitar este día';
+      $('btn-festivo-toggle').onclick = async () => {
+        $('btn-festivo-toggle').disabled = true;
+        try {
+          if (habilitado) await Store.deshabilitarFestivo(barberoId, fecha);
+          else await Store.habilitarFestivo(barberoId, fecha);
+        } catch (err) {
+          console.error(err);
+          avisar('No se pudo actualizar el festivo. Inténtalo de nuevo.', 'error');
+        } finally {
+          $('btn-festivo-toggle').disabled = false;
+        }
+      };
     }
 
     function renderPanel() {
@@ -2905,6 +3060,7 @@
       $('agenda-historico-wrap').hidden = estado.modo !== 'historico';
 
       renderAgendaStrip(todas);
+      renderFestivoAviso();
       renderDiasBloqueados();
       renderResumen(todas);
       renderClientes(todas);
@@ -3326,6 +3482,12 @@
       });
       Store.suscribirDiasBloqueados(lista => {
         estado.diasBloqueados = lista;
+        renderDiaStrip();
+        renderHorarios();
+        renderPanel();
+      });
+      Store.suscribirFestivosHabilitados(lista => {
+        estado.festivosHabilitados = lista;
         renderDiaStrip();
         renderHorarios();
         renderPanel();
