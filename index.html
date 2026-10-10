@@ -1295,7 +1295,10 @@
           <i class="fa-brands fa-instagram" aria-hidden="true"></i> Instagram
         </a>
         <a href="https://wa.me/573148962096" target="_blank" rel="noopener noreferrer" class="social-btn">
-          <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> WhatsApp
+          <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> WhatsApp Nowwer
+        </a>
+        <a href="https://wa.me/573182750176" target="_blank" rel="noopener noreferrer" class="social-btn">
+          <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> WhatsApp Osnayder
         </a>
         <a href="https://www.facebook.com/share/1EbeX6xPWe/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" class="social-btn">
           <i class="fa-brands fa-facebook" aria-hidden="true"></i> Facebook
@@ -1673,6 +1676,15 @@
 
     function formatoFecha(f) {
       return new Date(f + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' });
+    }
+
+    // Convierte "14:00" (como se guarda, 24h) a "2:00pm" (como se muestra, 12h).
+    // El dato guardado en Firestore NUNCA cambia de formato, solo esto que se ve en pantalla.
+    function formatoHora12(hora24) {
+      const [h, m] = hora24.split(':').map(Number);
+      const periodo = h < 12 ? 'am' : 'pm';
+      const h12 = h % 12 === 0 ? 12 : h % 12;
+      return `${h12}:${String(m).padStart(2, '0')}${periodo}`;
     }
 
     function horaPasada(fecha, hora) {
@@ -2350,7 +2362,7 @@
       cont.replaceChildren();
       cont.appendChild(el('strong', null,
         futuras.length === 1 ? 'Ya tienes una cita agendada' : `Ya tienes ${futuras.length} citas agendadas`));
-      futuras.forEach(c => cont.appendChild(el('div', 'item', `${nombreBarbero(c.barberoId)} · ${c.fecha} · ${c.hora}`)));
+      futuras.forEach(c => cont.appendChild(el('div', 'item', `${nombreBarbero(c.barberoId)} · ${c.fecha} · ${formatoHora12(c.hora)}`)));
       cont.appendChild(el('p', 'hint', 'Si de verdad quieres otra, completa el formulario de abajo. Si no, ya tienes la tuya.'));
       cont.hidden = false;
     }
@@ -2652,13 +2664,13 @@
       }
 
       horas.forEach(hora => {
-        const btn = el('button', 'slot-btn', hora);
+        const btn = el('button', 'slot-btn', formatoHora12(hora));
         btn.type = 'button';
 
         if (ocupadas.has(hora) || horaPasada(fecha, hora)) {
           btn.classList.add('blocked');
           btn.disabled = true;
-          btn.setAttribute('aria-label', `${hora}, no disponible`);
+          btn.setAttribute('aria-label', `${formatoHora12(hora)}, no disponible`);
         } else {
           const elegida = hora === estado.horaSel;
           btn.classList.toggle('selected', elegida);
@@ -2696,7 +2708,7 @@
       icono_ok.setAttribute('aria-hidden', 'true');
       box.appendChild(icono_ok);
       box.appendChild(el('strong', 'confirmacion-titulo', '¡Tu cita ha sido confirmada!'));
-      box.appendChild(el('span', 'confirmacion-detalle', `${nombreBarbero(cita.barberoId)} · ${cita.fecha} · ${cita.hora}`));
+      box.appendChild(el('span', 'confirmacion-detalle', `${nombreBarbero(cita.barberoId)} · ${cita.fecha} · ${formatoHora12(cita.hora)}`));
       box.appendChild(el('span', 'confirmacion-nota', 'Ya quedó agendada, no tienes que hacer nada más. Te llegará el aviso por correo (y por Telegram, si lo conectaste).'));
 
       const cerrarConfirmacion = () => {
@@ -3194,7 +3206,7 @@
 
       const info = el('div', 'card-info');
       const h3 = el('h3');
-      h3.append(`${c.hora} - ${c.clienteNombre} `, el('span', `badge badge-${est}`, est));
+      h3.append(`${formatoHora12(c.hora)} - ${c.clienteNombre} `, el('span', `badge badge-${est}`, est));
       const p = el('p');
       p.append(icono('fa-solid fa-calendar'), ` ${c.fecha} | `, icono('fa-solid fa-user-ninja'), ` ${nombreBarbero(c.barberoId)}`);
       if (est !== 'bloqueada' && tel) {
@@ -3208,7 +3220,7 @@
         acciones.append(
           botonAccion('fa-solid fa-check', 'var(--success)', 'Marcar como completada', () => actualizarCita(c, 'completada')),
           botonAccion('fa-solid fa-xmark', 'var(--danger)', 'Cancelar cita', () => {
-            if (confirm(`¿Cancelar la cita de ${c.clienteNombre} a las ${c.hora}?`)) actualizarCita(c, 'cancelada');
+            if (confirm(`¿Cancelar la cita de ${c.clienteNombre} a las ${formatoHora12(c.hora)}?`)) actualizarCita(c, 'cancelada');
           })
         );
       }
@@ -3260,7 +3272,7 @@
       horasDelDia($('bloq-fecha').value).forEach(h => {
         const op = document.createElement('option');
         op.value = h;
-        op.textContent = h;
+        op.textContent = formatoHora12(h);
         sel.appendChild(op);
       });
       if ([...sel.options].some(o => o.value === actual)) sel.value = actual;
@@ -3287,7 +3299,7 @@
       try {
         await Store.bloquear(barberoId, fecha, hora);
         $('dlg-bloqueo').close();
-        avisar(`Bloqueado: ${nombreBarbero(barberoId)}, ${fecha} a las ${hora}.`);
+        avisar(`Bloqueado: ${nombreBarbero(barberoId)}, ${fecha} a las ${formatoHora12(hora)}.`);
       } catch (err) {
         if (err && err.message === 'OCUPADO') {
           avisar('Esa hora ya está ocupada o bloqueada.', 'error');
