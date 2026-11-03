@@ -1604,19 +1604,19 @@
     // Cerrado los miércoles. Almuerzo de 1 a 2 pm, igual para todos los barberos y días.
     const DURACION_TURNO_MIN = 40; // turnos de 40 minutos
     const ALMUERZO = { desde: "13:00", hasta: "14:00" };
-    // Un barbero que empieza más tarde que el horario general, solo en ciertos días
-    // (0=domingo … 6=sábado). Nowwer: de lunes a viernes su primer turno es a las 8:40.
-    // Los turnos siguen la misma cuadrícula de 40 min, solo se quita el de las 8:00.
-    const INICIO_PERSONALIZADO = {
-      barbero_1: { dias: [1, 2, 3, 4, 5], abre: "08:40" }
-    };
+    // Un barbero que empieza distinto al horario general, solo en ciertos días
+    // (0=domingo … 6=sábado). Hoy no hay ninguno: los tres barberos usan el horario general.
+    // Ejemplo para el futuro: barbero_2: { dias: [6], abre: "09:20" }
+    const INICIO_PERSONALIZADO = {};
+    // Lunes a viernes el primer turno es a las 8:40 (la cuadrícula de 40 min no cambia,
+    // solo se quita el de las 8:00). Sábado y domingo siguen desde las 8:00.
     const HORARIO_SEMANA = {
       0: { abre: "08:00", cierra: "19:00" }, // domingo
-      1: { abre: "08:00", cierra: "20:00" }, // lunes
-      2: { abre: "08:00", cierra: "20:00" }, // martes
+      1: { abre: "08:40", cierra: "20:00" }, // lunes
+      2: { abre: "08:40", cierra: "20:00" }, // martes
       3: null,                                // miércoles: no se trabaja
-      4: { abre: "08:00", cierra: "20:00" }, // jueves
-      5: { abre: "08:00", cierra: "20:00" }, // viernes
+      4: { abre: "08:40", cierra: "20:00" }, // jueves
+      5: { abre: "08:40", cierra: "20:00" }, // viernes
       6: { abre: "08:00", cierra: "21:00" }  // sábado
     };
     const ESTADOS = ["pendiente", "completada", "cancelada", "bloqueada"];
