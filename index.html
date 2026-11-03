@@ -1604,6 +1604,12 @@
     // Cerrado los miércoles. Almuerzo de 1 a 2 pm, igual para todos los barberos y días.
     const DURACION_TURNO_MIN = 40; // turnos de 40 minutos
     const ALMUERZO = { desde: "13:00", hasta: "14:00" };
+    // Un barbero que empieza más tarde que el horario general, solo en ciertos días
+    // (0=domingo … 6=sábado). Nowwer: de lunes a viernes su primer turno es a las 8:40.
+    // Los turnos siguen la misma cuadrícula de 40 min, solo se quita el de las 8:00.
+    const INICIO_PERSONALIZADO = {
+      barbero_1: { dias: [1, 2, 3, 4, 5], abre: "08:40" }
+    };
     const HORARIO_SEMANA = {
       0: { abre: "08:00", cierra: "19:00" }, // domingo
       1: { abre: "08:00", cierra: "20:00" }, // lunes
@@ -1646,13 +1652,15 @@
       return `${fecha.slice(0, 7)}-${pad(new Date(y, m, 0).getDate())}`;
     }
 
-    // Turnos del día según el horario semanal real del negocio, saltando la hora
-    // de almuerzo. [] si ese día no se trabaja.
-    function horasDelDia(fecha) {
+    // Turnos del día según el horario semanal real del negocio (y el inicio propio
+    // del barbero, si lo tiene), saltando la hora de almuerzo. [] si ese día no se trabaja.
+    function horasDelDia(fecha, barberoId) {
       const dia = new Date(fecha + 'T12:00:00').getDay();
       const cfg = HORARIO_SEMANA[dia];
       if (!cfg) return [];
-      const [h1, m1] = cfg.abre.split(':').map(Number);
+      const propio = INICIO_PERSONALIZADO[barberoId];
+      const abre = propio && propio.dias.includes(dia) ? propio.abre : cfg.abre;
+      const [h1, m1] = abre.split(':').map(Number);
       const [h2, m2] = cfg.cierra.split(':').map(Number);
       const [ha1, ma1] = ALMUERZO.desde.split(':').map(Number);
       const [ha2, ma2] = ALMUERZO.hasta.split(':').map(Number);
@@ -2579,7 +2587,7 @@
       for (let i = 0; i < DIAS_STRIP_CANTIDAD; i++) {
         const fecha = sumarDias(hoy, i);
         const d = new Date(fecha + 'T12:00:00');
-        const horasDia = horasDelDia(fecha);
+        const horasDia = horasDelDia(fecha, barberoId);
         const festivo = esFestivo(fecha) && !festivoHabilitado(barberoId, fecha);
         const cerrado = horasDia.length === 0 || diaBloqueado(barberoId, fecha) || festivo;
 
@@ -2636,7 +2644,7 @@
       }
 
       // El negocio no atiende ese día de la semana (por ahora, los miércoles).
-      const horas = horasDelDia(fecha);
+      const horas = horasDelDia(fecha, barberoId);
       if (horas.length === 0) {
         grid.appendChild(mensajeHorarios('Ese día no atendemos. Elige otra fecha.', true));
         estado.horaSel = '';
@@ -3269,7 +3277,7 @@
       const sel = $('bloq-hora');
       const actual = sel.value;
       sel.replaceChildren();
-      horasDelDia($('bloq-fecha').value).forEach(h => {
+      horasDelDia($('bloq-fecha').value, $('bloq-barbero').value).forEach(h => {
         const op = document.createElement('option');
         op.value = h;
         op.textContent = formatoHora12(h);
@@ -3449,6 +3457,7 @@
       $('btn-bloquear').addEventListener('click', abrirBloqueo);
       $('btn-bloq-cancelar').addEventListener('click', () => $('dlg-bloqueo').close());
       $('bloq-fecha').addEventListener('change', actualizarHorasBloqueo);
+      $('bloq-barbero').addEventListener('change', actualizarHorasBloqueo);
       $('form-bloqueo').addEventListener('submit', enviarBloqueo);
 
       $('btn-bloquear-dia').addEventListener('click', abrirBloqueoDia);
